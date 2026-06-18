@@ -10,6 +10,7 @@ create table listings (
   status      text not null default 'available',
   description text,
   photo_url   text,
+  photos      text[] default '{}',
   created_at  timestamptz default now()
 );
 
@@ -44,14 +45,28 @@ create table staging_bookings (
   created_at      timestamptz default now()
 );
 
--- 4. Row-level security (permissive for demo — tighten before going to production)
-alter table listings         enable row level security;
-alter table viewing_bookings enable row level security;
-alter table staging_bookings enable row level security;
+-- 4. Staging inspiration gallery
+create table staging_inspiration (
+  id          uuid default gen_random_uuid() primary key,
+  title       text not null,
+  tag         text not null,
+  description text,
+  idea        text,
+  photo_url   text,
+  photos      text[] default '{}',
+  created_at  timestamptz default now()
+);
 
-create policy "Public all listings"         on listings         for all using (true) with check (true);
-create policy "Public all viewing_bookings" on viewing_bookings for all using (true) with check (true);
-create policy "Public all staging_bookings" on staging_bookings for all using (true) with check (true);
+-- 5. Row-level security (permissive for demo — tighten before going to production)
+alter table listings              enable row level security;
+alter table viewing_bookings      enable row level security;
+alter table staging_bookings      enable row level security;
+alter table staging_inspiration   enable row level security;
+
+create policy "Public all listings"             on listings             for all using (true) with check (true);
+create policy "Public all viewing_bookings"     on viewing_bookings     for all using (true) with check (true);
+create policy "Public all staging_bookings"     on staging_bookings     for all using (true) with check (true);
+create policy "Public all staging_inspiration"  on staging_inspiration  for all using (true) with check (true);
 
 -- 5. Storage bucket for listing photos
 -- After running the SQL above, go to:

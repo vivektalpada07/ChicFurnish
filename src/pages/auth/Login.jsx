@@ -39,9 +39,8 @@ export default function Login() {
         <div className="auth-logo">CHIC <span>FURNISH</span></div>
         <div className="auth-tagline">Luxury Staging & Furniture</div>
         <div style={{ marginTop: '3rem', borderTop: '0.5px solid rgba(201,169,110,0.2)', paddingTop: '2rem', width: '100%' }}>
-          <p style={{ fontSize: '0.75rem', color: 'rgba(201,169,110,0.5)', letterSpacing: '0.1em', marginBottom: '0.75rem' }}>Admin demo login</p>
-          <p style={{ fontSize: '0.8rem', color: 'rgba(250,248,244,0.4)', fontWeight: 300 }}>admin@chicfurnish.co.nz</p>
-          <p style={{ fontSize: '0.8rem', color: 'rgba(250,248,244,0.4)', fontWeight: 300 }}>admin123</p>
+          <p style={{ fontSize: '0.75rem', color: 'rgba(201,169,110,0.5)', letterSpacing: '0.1em', marginBottom: '0.75rem' }}>Admin login</p>
+          <p style={{ fontSize: '0.8rem', color: 'rgba(250,248,244,0.4)', fontWeight: 300 }}>vivektalpada769@gmail.com</p>
         </div>
       </div>
 

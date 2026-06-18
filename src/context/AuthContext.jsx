@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
-const ADMIN_EMAIL = 'admin@chicfurnish.co.nz';
+const ADMIN_EMAIL = 'vivektalpada769@gmail.com';
 
 function buildUser(sbUser) {
   return {
@@ -44,7 +44,13 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: 'Incorrect email or password.' };
+    if (error) {
+      console.error('Supabase login error:', error.message);
+      if (error.message.includes('Email not confirmed')) {
+        return { error: 'Please confirm your email first, or disable email confirmation in Supabase.' };
+      }
+      return { error: 'Incorrect email or password.' };
+    }
     const role = data.user.email === ADMIN_EMAIL ? 'admin' : 'customer';
     return { success: true, role };
   };

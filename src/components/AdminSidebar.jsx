@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 const NAV = [
   { group: 'Overview', items: [{ label: 'Dashboard', path: '/admin' }] },
   { group: 'Furniture', items: [{ label: 'Listings', path: '/admin/listings' }] },
+  { group: 'Staging', items: [{ label: 'Inspiration Gallery', path: '/admin/inspiration' }] },
   {
     group: 'Bookings',
     items: [

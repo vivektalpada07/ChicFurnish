@@ -33,6 +33,9 @@ export default function CustomerShop() {
   });
   const [checkoutError, setCheckoutError] = useState('');
 
+  const [detailItem, setDetailItem] = useState(null);
+  const [activePhoto, setActivePhoto] = useState(null);
+
   const [viewingModal, setViewingModal] = useState(null);
   const [viewingForm, setViewingForm] = useState({ phone: '', date: '', time: '10:00 AM' });
   const [viewingDone, setViewingDone] = useState(false);
@@ -70,6 +73,11 @@ export default function CustomerShop() {
     }
     setCartStep('confirmed');
     setCart([]);
+  };
+
+  const openDetail = (item) => {
+    setDetailItem(item);
+    setActivePhoto(item.photo_url || null);
   };
 
   const openViewing = (item) => {
@@ -169,8 +177,8 @@ export default function CustomerShop() {
             onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(26,58,92,0.18)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
           >
-            {/* Product image */}
-            <div style={{ height: 230, position: 'relative', overflow: 'hidden' }}>
+            {/* Product image — click to open detail */}
+            <div style={{ height: 230, position: 'relative', overflow: 'hidden', cursor: 'pointer' }} onClick={() => openDetail(item)}>
               {item.photo_url
                 ? <img src={item.photo_url} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 : (
@@ -180,11 +188,23 @@ export default function CustomerShop() {
                 )
               }
               <span style={{ position: 'absolute', top: '0.75rem', left: '0.75rem', background: item.condition === 'New' ? '#1a3a5c' : '#c04a1a', color: 'white', fontSize: '0.72rem', letterSpacing: '0.15em', textTransform: 'uppercase', padding: '0.35rem 0.8rem', fontWeight: 700 }}>{item.condition}</span>
+              {(item.photos || []).length > 0 && (
+                <span style={{ position: 'absolute', bottom: '0.75rem', right: '0.75rem', background: 'rgba(15,30,46,0.75)', color: 'white', fontSize: '0.68rem', letterSpacing: '0.08em', padding: '0.25rem 0.6rem', fontWeight: 700 }}>
+                  +{(item.photos || []).length} photos
+                </span>
+              )}
             </div>
 
             <div style={{ padding: '1.4rem 1.5rem 1.6rem' }}>
-              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 600, marginBottom: '0.4rem', color: '#0f1e2e' }}>{item.name}</h3>
-              {item.description && <p style={{ fontSize: '0.9rem', color: '#2a3d52', marginBottom: '1rem', lineHeight: 1.75, fontWeight: 400 }}>{item.description}</p>}
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 600, marginBottom: '0.4rem', color: '#0f1e2e', cursor: 'pointer' }} onClick={() => openDetail(item)}>{item.name}</h3>
+              {item.description && (
+                <p style={{
+                  fontSize: '0.9rem', color: '#2a3d52', marginBottom: '1rem', lineHeight: 1.75, fontWeight: 400,
+                  display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                }}>
+                  {item.description}
+                </p>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1.2rem' }}>
                 <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 600, color: '#0f1e2e' }}>${Number(item.price).toLocaleString()}</span>
                 <span style={{ fontSize: '0.78rem', color: '#4a5e72', fontWeight: 700 }}>NZD</span>
@@ -222,6 +242,100 @@ export default function CustomerShop() {
           <span style={{ fontSize: '0.82rem', color: 'rgba(214,232,245,0.5)' }}>© 2026 Chic Furnish · Auckland, New Zealand</span>
         </div>
       </footer>
+
+      {/* ── PRODUCT DETAIL MODAL ── */}
+      {detailItem && (() => {
+        const allPhotos = [detailItem.photo_url, ...(detailItem.photos || [])].filter(Boolean);
+        return (
+          <div className="modal-overlay" onClick={() => setDetailItem(null)} style={{ alignItems: 'center', padding: '1rem' }}>
+            <div style={{ background: '#f8f4ee', width: '100%', maxWidth: 920, maxHeight: '92vh', overflowY: 'auto', border: '2px solid #b8c8d8' }} onClick={(e) => e.stopPropagation()}>
+
+              {/* Header bar */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', borderBottom: '1.5px solid #b8c8d8', background: '#1a3a5c' }}>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: '#d6e8f5', letterSpacing: '0.15em' }}>CHIC <span style={{ color: '#f0a070' }}>FURNISH</span></span>
+                <button onClick={() => setDetailItem(null)} style={{ background: 'none', border: '1.5px solid rgba(214,232,245,0.4)', color: '#d6e8f5', padding: '0.4rem 0.9rem', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.12em' }}>✕ CLOSE</button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
+
+                {/* Left: Photo gallery */}
+                <div style={{ borderRight: '1.5px solid #b8c8d8', padding: '1.5rem' }}>
+                  {/* Main photo display */}
+                  <div style={{ aspectRatio: '4/3', background: '#d6e8f5', overflow: 'hidden', position: 'relative' }}>
+                    {activePhoto
+                      ? <img src={activePhoto} alt={detailItem.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', color: 'rgba(26,58,92,0.3)', letterSpacing: '0.3em' }}>{detailItem.category.toUpperCase()}</span>
+                        </div>
+                    }
+                  </div>
+
+                  {/* Thumbnail strip */}
+                  {allPhotos.length > 1 && (
+                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+                      {allPhotos.map((photo, i) => (
+                        <div
+                          key={i}
+                          onClick={() => setActivePhoto(photo)}
+                          style={{ width: 72, height: 58, cursor: 'pointer', overflow: 'hidden', flexShrink: 0, outline: activePhoto === photo ? '2.5px solid #1a3a5c' : '2px solid #b8c8d8', outlineOffset: activePhoto === photo ? '1px' : '0', transition: 'outline 0.15s' }}
+                        >
+                          <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {allPhotos.length === 0 && (
+                    <p style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: '#4a5e72', textAlign: 'center' }}>No photos uploaded yet</p>
+                  )}
+                </div>
+
+                {/* Right: Product info */}
+                <div style={{ padding: '1.75rem 2rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.85rem', flexWrap: 'wrap' }}>
+                    <span style={{ background: detailItem.condition === 'New' ? '#1a3a5c' : '#c04a1a', color: 'white', fontSize: '0.68rem', letterSpacing: '0.18em', textTransform: 'uppercase', padding: '0.3rem 0.75rem', fontWeight: 700 }}>{detailItem.condition}</span>
+                    <span style={{ background: '#eef5fb', color: '#1a3a5c', fontSize: '0.68rem', letterSpacing: '0.15em', textTransform: 'capitalize', padding: '0.3rem 0.75rem', fontWeight: 700, border: '1.5px solid #b8c8d8' }}>{detailItem.category}</span>
+                  </div>
+
+                  <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem,3vw,2.2rem)', fontWeight: 600, lineHeight: 1.15, color: '#0f1e2e', marginBottom: '0.75rem' }}>
+                    {detailItem.name}
+                  </h1>
+
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', margin: '1rem 0 1.5rem', paddingBottom: '1.25rem', borderBottom: '1.5px solid #b8c8d8' }}>
+                    <span style={{ fontFamily: 'var(--font-display)', fontSize: '2.4rem', fontWeight: 600, color: '#0f1e2e', lineHeight: 1 }}>
+                      ${Number(detailItem.price).toLocaleString()}
+                    </span>
+                    <span style={{ fontSize: '0.85rem', color: '#4a5e72', fontWeight: 700 }}>NZD</span>
+                  </div>
+
+                  {detailItem.description && (
+                    <div style={{ marginBottom: '1.5rem' }}>
+                      <p style={{ fontSize: '0.7rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#1a3a5c', fontWeight: 700, marginBottom: '0.65rem' }}>Description</p>
+                      <p style={{ fontSize: '0.95rem', color: '#2a3d52', lineHeight: 1.9, fontWeight: 400, whiteSpace: 'pre-wrap' }}>
+                        {detailItem.description}
+                      </p>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginTop: '1.5rem' }}>
+                    <button
+                      style={{ ...darkBtn, padding: '0.9rem 1.5rem', width: '100%', fontSize: '0.82rem' }}
+                      onClick={() => { setDetailItem(null); openViewing(detailItem); }}
+                    >
+                      Book a Viewing →
+                    </button>
+                    <button
+                      style={{ padding: '0.9rem 1.5rem', width: '100%', background: cart.find((c) => c.id === detailItem.id) ? '#eef5fb' : 'transparent', color: cart.find((c) => c.id === detailItem.id) ? '#1a3a5c' : '#c04a1a', border: '2px solid ' + (cart.find((c) => c.id === detailItem.id) ? '#b8c8d8' : '#c04a1a'), fontFamily: 'var(--font-body)', fontSize: '0.82rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+                      onClick={() => addToCart(detailItem)}
+                    >
+                      {cart.find((c) => c.id === detailItem.id) ? '✓ Added to Cart' : 'Add to Cart'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── CART / CHECKOUT PANEL ── */}
       {cartOpen && (

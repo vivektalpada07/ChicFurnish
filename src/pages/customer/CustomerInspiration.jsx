@@ -1,19 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CustomerNav from '../../components/CustomerNav';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
-const ROOMS = [
-  { id: 1, title: 'Coastal Calm Living', tag: 'Living Room', desc: 'Staged for a waterfront Takapuna property', color: '#d4c9b8' },
-  { id: 2, title: 'Moody Dining Room', tag: 'Dining', desc: 'Dramatic dark tones with brass accents', color: '#b8b0a4' },
-  { id: 3, title: 'Boudoir Master Suite', tag: 'Bedroom', desc: 'Soft linen layers for a Grey Lynn villa', color: '#ccc0b4' },
-  { id: 4, title: 'Minimalist Study Nook', tag: 'Study', desc: 'Curated shelf styling and natural light', color: '#c4beb4' },
-  { id: 5, title: 'Golden Hour Lounge', tag: 'Living Room', desc: 'Warm tones for an inner-city apartment', color: '#d0c4a8' },
-  { id: 6, title: 'Travertine Kitchen', tag: 'Kitchen', desc: 'Stone and rattan styling', color: '#beb4a8' },
-  { id: 7, title: 'Japandi Reading Corner', tag: 'Living Room', desc: 'Curated calm for a Mt Eden bungalow', color: '#c8c0b0' },
-  { id: 8, title: 'Velvet & Oak Bedroom', tag: 'Bedroom', desc: 'Rich textures for a Remuera townhouse', color: '#c0b4a4' },
+// Fallback placeholder cards shown before admin adds real ones
+const PLACEHOLDER_ROOMS = [
+  { id: 'p1', title: 'Coastal Calm Living',    tag: 'Living Room', description: 'Staged for a waterfront Takapuna property', idea: '', gradient: 'linear-gradient(155deg,#a8c8d8 0%,#d8e8f0 45%,#f0e8d8 100%)', isPlaceholder: true },
+  { id: 'p2', title: 'Moody Dining Room',      tag: 'Dining',      description: 'Dramatic dark tones with brass accents',    idea: '', gradient: 'linear-gradient(155deg,#1e1a14 0%,#3c2c14 50%,#806040 100%)', isPlaceholder: true },
+  { id: 'p3', title: 'Boudoir Master Suite',   tag: 'Bedroom',     description: 'Soft linen layers for a Grey Lynn villa',  idea: '', gradient: 'linear-gradient(155deg,#d8b8c0 0%,#e8d0c8 55%,#f4ece4 100%)', isPlaceholder: true },
+  { id: 'p4', title: 'Minimalist Study Nook',  tag: 'Study',       description: 'Curated shelf styling and natural light',  idea: '', gradient: 'linear-gradient(155deg,#c0d4c4 0%,#dce8d8 50%,#f4f0e8 100%)', isPlaceholder: true },
+  { id: 'p5', title: 'Golden Hour Lounge',     tag: 'Living Room', description: 'Warm tones for an inner-city apartment',  idea: '', gradient: 'linear-gradient(155deg,#c07828 0%,#d8a050 45%,#f0d888 100%)', isPlaceholder: true },
+  { id: 'p6', title: 'Travertine Kitchen',     tag: 'Kitchen',     description: 'Stone and rattan styling',                idea: '', gradient: 'linear-gradient(155deg,#a89880 0%,#c8bca8 50%,#e8e0d0 100%)', isPlaceholder: true },
+  { id: 'p7', title: 'Japandi Reading Corner', tag: 'Living Room', description: 'Curated calm for a Mt Eden bungalow',    idea: '', gradient: 'linear-gradient(155deg,#c0b898 0%,#d8d0b8 50%,#eceae0 100%)', isPlaceholder: true },
+  { id: 'p8', title: 'Velvet & Oak Bedroom',   tag: 'Bedroom',     description: 'Rich textures for a Remuera townhouse',  idea: '', gradient: 'linear-gradient(155deg,#281828 0%,#582840 50%,#906858 100%)', isPlaceholder: true },
 ];
+
+const TAG_GRADIENTS = {
+  'Living Room': 'linear-gradient(155deg,#a8c8d8 0%,#d8e8f0 45%,#f0e8d8 100%)',
+  'Dining':      'linear-gradient(155deg,#1e1a14 0%,#3c2c14 50%,#806040 100%)',
+  'Bedroom':     'linear-gradient(155deg,#d8b8c0 0%,#e8d0c8 55%,#f4ece4 100%)',
+  'Study':       'linear-gradient(155deg,#c0d4c4 0%,#dce8d8 50%,#f4f0e8 100%)',
+  'Kitchen':     'linear-gradient(155deg,#a89880 0%,#c8bca8 50%,#e8e0d0 100%)',
+};
 
 const TAGS = ['All', 'Living Room', 'Dining', 'Bedroom', 'Study', 'Kitchen'];
 const SERVICES = ['Full Home Staging', 'Partial Staging', 'Vacant Property', 'Photography Prep', 'Short-Term Hire'];
@@ -104,7 +113,31 @@ export default function CustomerInspiration() {
   const [submitted, setSubmitted] = useState(false);
   const [requireLogin, setRequireLogin] = useState(false);
 
-  const filtered = activeTag === 'All' ? ROOMS : ROOMS.filter((r) => r.tag === activeTag);
+  // Real data from Supabase
+  const [dbRooms, setDbRooms] = useState(null);
+  const [allListings, setAllListings] = useState([]);
+  const [detailCard, setDetailCard] = useState(null);
+  const [detailPhoto, setDetailPhoto] = useState(null);
+  const [cart, setCart] = useState([]);
+
+  useEffect(() => {
+    supabase.from('staging_inspiration').select('*').order('created_at', { ascending: false })
+      .then(({ data }) => setDbRooms(data || []));
+    supabase.from('listings').select('*')
+      .then(({ data }) => setAllListings(data || []));
+  }, []);
+
+  const rooms = dbRooms && dbRooms.length > 0 ? dbRooms : PLACEHOLDER_ROOMS;
+  const filtered = activeTag === 'All' ? rooms : rooms.filter((r) => r.tag === activeTag);
+
+  const addToCart = (item) => {
+    setCart((prev) => prev.find((c) => c.id === item.id) ? prev : [...prev, item]);
+  };
+
+  const openDetail = (card) => {
+    setDetailCard(card);
+    setDetailPhoto(card.photo_url || null);
+  };
 
   const openStaging = () => {
     if (!user) { setRequireLogin(true); return; }
@@ -191,24 +224,219 @@ export default function CustomerInspiration() {
 
       {/* ── GALLERY ── */}
       <section style={{ padding: '2.5rem 2.5rem 5rem', columns: '3 280px', columnGap: '1rem' }}>
-        {filtered.map((room, i) => (
-          <div key={room.id} style={{ breakInside: 'avoid', marginBottom: '1rem', position: 'relative', overflow: 'hidden', cursor: 'pointer' }}>
-            <div style={{
-              width: '100%', height: i % 3 === 0 ? 340 : i % 3 === 1 ? 260 : 300,
-              background: room.color, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              position: 'relative', transition: 'transform 0.5s',
-            }}>
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.9rem', color: 'rgba(26,58,92,0.3)', letterSpacing: '0.18em', fontWeight: 600 }}>
-                {room.tag.toUpperCase()}
-              </span>
+        {filtered.map((room, i) => {
+          const h = i % 3 === 0 ? 340 : i % 3 === 1 ? 260 : 300;
+          const gradient = room.gradient || TAG_GRADIENTS[room.tag] || TAG_GRADIENTS['Living Room'];
+          const isDark = gradient.includes('#1e') || gradient.includes('#28');
+          const iconColor = isDark ? 'rgba(255,255,255,0.22)' : 'rgba(30,50,70,0.18)';
+          const floorColor = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(30,50,70,0.10)';
+          const allPhotos = [room.photo_url, ...(room.photos || [])].filter(Boolean);
+
+          // SVG room scenes per tag
+          const scenes = {
+            'Living Room': (
+              <svg viewBox="0 0 260 160" xmlns="http://www.w3.org/2000/svg" style={{ width: '90%', maxWidth: 240, height: 'auto' }}>
+                {/* Floor line */}
+                <line x1="10" y1="130" x2="250" y2="130" stroke={iconColor} strokeWidth="1.5"/>
+                {/* Sofa body */}
+                <rect x="40" y="90" width="140" height="40" rx="8" fill="none" stroke={iconColor} strokeWidth="2"/>
+                {/* Sofa back */}
+                <rect x="40" y="74" width="140" height="20" rx="6" fill="none" stroke={iconColor} strokeWidth="1.5"/>
+                {/* Sofa arms */}
+                <rect x="30" y="84" width="16" height="46" rx="5" fill="none" stroke={iconColor} strokeWidth="1.5"/>
+                <rect x="174" y="84" width="16" height="46" rx="5" fill="none" stroke={iconColor} strokeWidth="1.5"/>
+                {/* Cushions */}
+                <rect x="52" y="92" width="42" height="34" rx="5" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                <rect x="99" y="92" width="42" height="34" rx="5" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                <rect x="146" y="92" width="28" height="34" rx="5" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                {/* Coffee table */}
+                <rect x="85" y="118" width="90" height="12" rx="3" fill="none" stroke={iconColor} strokeWidth="1.5"/>
+                <line x1="95" y1="130" x2="93" y2="148" stroke={iconColor} strokeWidth="1.2"/>
+                <line x1="165" y1="130" x2="167" y2="148" stroke={iconColor} strokeWidth="1.2"/>
+                {/* Lamp */}
+                <line x1="218" y1="130" x2="218" y2="75" stroke={iconColor} strokeWidth="1.5"/>
+                <ellipse cx="218" cy="73" rx="18" ry="8" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                <line x1="200" y1="68" x2="236" y2="68" stroke={iconColor} strokeWidth="1"/>
+                {/* Plant */}
+                <line x1="38" y1="130" x2="38" y2="106" stroke={iconColor} strokeWidth="1.2"/>
+                <ellipse cx="38" cy="102" rx="12" ry="8" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                <ellipse cx="30" cy="96" rx="8" ry="6" fill="none" stroke={iconColor} strokeWidth="1"/>
+                <ellipse cx="46" cy="96" rx="8" ry="6" fill="none" stroke={iconColor} strokeWidth="1"/>
+                {/* Rug */}
+                <ellipse cx="130" cy="148" rx="68" ry="10" fill="none" stroke={floorColor} strokeWidth="1.2"/>
+              </svg>
+            ),
+            'Dining': (
+              <svg viewBox="0 0 260 160" xmlns="http://www.w3.org/2000/svg" style={{ width: '90%', maxWidth: 240, height: 'auto' }}>
+                <line x1="10" y1="138" x2="250" y2="138" stroke={iconColor} strokeWidth="1.5"/>
+                {/* Table top */}
+                <rect x="65" y="72" width="130" height="10" rx="3" fill="none" stroke={iconColor} strokeWidth="2"/>
+                {/* Table legs */}
+                <line x1="80" y1="82" x2="78" y2="138" stroke={iconColor} strokeWidth="1.5"/>
+                <line x1="180" y1="82" x2="182" y2="138" stroke={iconColor} strokeWidth="1.5"/>
+                {/* Left chairs */}
+                <rect x="28" y="80" width="32" height="22" rx="5" fill="none" stroke={iconColor} strokeWidth="1.5"/>
+                <rect x="30" y="68" width="28" height="14" rx="4" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                <line x1="32" y1="102" x2="30" y2="116" stroke={iconColor} strokeWidth="1.2"/>
+                <line x1="56" y1="102" x2="58" y2="116" stroke={iconColor} strokeWidth="1.2"/>
+                {/* Right chairs */}
+                <rect x="200" y="80" width="32" height="22" rx="5" fill="none" stroke={iconColor} strokeWidth="1.5"/>
+                <rect x="202" y="68" width="28" height="14" rx="4" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                <line x1="204" y1="102" x2="202" y2="116" stroke={iconColor} strokeWidth="1.2"/>
+                <line x1="228" y1="102" x2="230" y2="116" stroke={iconColor} strokeWidth="1.2"/>
+                {/* Place settings */}
+                <ellipse cx="106" cy="78" rx="12" ry="5" fill="none" stroke={iconColor} strokeWidth="1"/>
+                <ellipse cx="154" cy="78" rx="12" ry="5" fill="none" stroke={iconColor} strokeWidth="1"/>
+                {/* Candle centrepiece */}
+                <rect x="124" y="58" width="12" height="16" rx="2" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                <line x1="130" y1="58" x2="130" y2="50" stroke={iconColor} strokeWidth="1"/>
+                <circle cx="130" cy="49" r="3" fill="none" stroke={iconColor} strokeWidth="1"/>
+                {/* Pendant light */}
+                <line x1="130" y1="10" x2="130" y2="38" stroke={iconColor} strokeWidth="1"/>
+                <path d="M112,38 Q130,52 148,38" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+              </svg>
+            ),
+            'Bedroom': (
+              <svg viewBox="0 0 260 160" xmlns="http://www.w3.org/2000/svg" style={{ width: '90%', maxWidth: 240, height: 'auto' }}>
+                <line x1="10" y1="138" x2="250" y2="138" stroke={iconColor} strokeWidth="1.5"/>
+                {/* Headboard */}
+                <rect x="50" y="50" width="160" height="32" rx="8" fill="none" stroke={iconColor} strokeWidth="2"/>
+                {/* Bed base */}
+                <rect x="50" y="80" width="160" height="56" rx="4" fill="none" stroke={iconColor} strokeWidth="1.8"/>
+                {/* Mattress / bedding */}
+                <rect x="56" y="84" width="148" height="48" rx="4" fill="none" stroke={iconColor} strokeWidth="1"/>
+                {/* Pillows */}
+                <rect x="66" y="86" width="46" height="26" rx="6" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                <rect x="148" y="86" width="46" height="26" rx="6" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                {/* Duvet fold */}
+                <path d="M56,118 Q130,112 204,118" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                {/* Bed legs */}
+                <line x1="58" y1="136" x2="56" y2="148" stroke={iconColor} strokeWidth="1.5"/>
+                <line x1="202" y1="136" x2="204" y2="148" stroke={iconColor} strokeWidth="1.5"/>
+                {/* Bedside tables */}
+                <rect x="12" y="96" width="32" height="40" rx="3" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                <line x1="12" y1="116" x2="44" y2="116" stroke={iconColor} strokeWidth="1"/>
+                <rect x="216" y="96" width="32" height="40" rx="3" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                <line x1="216" y1="116" x2="248" y2="116" stroke={iconColor} strokeWidth="1"/>
+                {/* Lamps on tables */}
+                <line x1="28" y1="96" x2="28" y2="78" stroke={iconColor} strokeWidth="1.2"/>
+                <ellipse cx="28" cy="76" rx="14" ry="6" fill="none" stroke={iconColor} strokeWidth="1"/>
+                <line x1="232" y1="96" x2="232" y2="78" stroke={iconColor} strokeWidth="1.2"/>
+                <ellipse cx="232" cy="76" rx="14" ry="6" fill="none" stroke={iconColor} strokeWidth="1"/>
+              </svg>
+            ),
+            'Study': (
+              <svg viewBox="0 0 260 160" xmlns="http://www.w3.org/2000/svg" style={{ width: '90%', maxWidth: 240, height: 'auto' }}>
+                <line x1="10" y1="138" x2="250" y2="138" stroke={iconColor} strokeWidth="1.5"/>
+                {/* Desk */}
+                <rect x="40" y="90" width="180" height="10" rx="2" fill="none" stroke={iconColor} strokeWidth="2"/>
+                <line x1="50" y1="100" x2="48" y2="138" stroke={iconColor} strokeWidth="1.5"/>
+                <line x1="210" y1="100" x2="212" y2="138" stroke={iconColor} strokeWidth="1.5"/>
+                {/* Desk chair */}
+                <rect x="98" y="108" width="44" height="22" rx="6" fill="none" stroke={iconColor} strokeWidth="1.5"/>
+                <rect x="100" y="100" width="40" height="10" rx="4" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                <line x1="105" y1="130" x2="102" y2="148" stroke={iconColor} strokeWidth="1.2"/>
+                <line x1="135" y1="130" x2="138" y2="148" stroke={iconColor} strokeWidth="1.2"/>
+                <line x1="120" y1="130" x2="120" y2="148" stroke={iconColor} strokeWidth="1"/>
+                {/* Monitor */}
+                <rect x="102" y="58" width="56" height="36" rx="3" fill="none" stroke={iconColor} strokeWidth="1.5"/>
+                <line x1="130" y1="94" x2="130" y2="100" stroke={iconColor} strokeWidth="1.5"/>
+                <line x1="116" y1="100" x2="144" y2="100" stroke={iconColor} strokeWidth="1.2"/>
+                {/* Bookshelf */}
+                <rect x="186" y="30" width="52" height="62" rx="2" fill="none" stroke={iconColor} strokeWidth="1.5"/>
+                <line x1="186" y1="55" x2="238" y2="55" stroke={iconColor} strokeWidth="1"/>
+                <line x1="186" y1="75" x2="238" y2="75" stroke={iconColor} strokeWidth="1"/>
+                {/* Books */}
+                <line x1="196" y1="35" x2="196" y2="55" stroke={iconColor} strokeWidth="2"/>
+                <line x1="203" y1="35" x2="203" y2="55" stroke={iconColor} strokeWidth="2"/>
+                <line x1="210" y1="35" x2="210" y2="55" stroke={iconColor} strokeWidth="2"/>
+                <line x1="218" y1="57" x2="218" y2="75" stroke={iconColor} strokeWidth="2"/>
+                <line x1="226" y1="57" x2="226" y2="75" stroke={iconColor} strokeWidth="2"/>
+                {/* Desk lamp */}
+                <line x1="170" y1="100" x2="170" y2="68" stroke={iconColor} strokeWidth="1.2"/>
+                <path d="M170,68 Q178,60 188,66" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                <ellipse cx="190" cy="68" rx="10" ry="5" fill="none" stroke={iconColor} strokeWidth="1"/>
+                {/* Plant pot */}
+                <rect x="44" y="76" width="20" height="16" rx="3" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                <path d="M54,76 Q48,62 42,58 M54,76 Q60,62 66,58 M54,76 Q54,62 54,55" fill="none" stroke={iconColor} strokeWidth="1"/>
+              </svg>
+            ),
+            'Kitchen': (
+              <svg viewBox="0 0 260 160" xmlns="http://www.w3.org/2000/svg" style={{ width: '90%', maxWidth: 240, height: 'auto' }}>
+                <line x1="10" y1="138" x2="250" y2="138" stroke={iconColor} strokeWidth="1.5"/>
+                {/* Counter base */}
+                <rect x="20" y="98" width="220" height="40" rx="4" fill="none" stroke={iconColor} strokeWidth="2"/>
+                {/* Counter top */}
+                <rect x="18" y="90" width="224" height="10" rx="3" fill="none" stroke={iconColor} strokeWidth="1.5"/>
+                {/* Cabinets */}
+                <rect x="22" y="102" width="60" height="32" rx="2" fill="none" stroke={iconColor} strokeWidth="1"/>
+                <rect x="88" y="102" width="60" height="32" rx="2" fill="none" stroke={iconColor} strokeWidth="1"/>
+                <rect x="154" y="102" width="60" height="32" rx="2" fill="none" stroke={iconColor} strokeWidth="1"/>
+                {/* Cabinet handles */}
+                <line x1="52" y1="118" x2="52" y2="124" stroke={iconColor} strokeWidth="1.5"/>
+                <line x1="118" y1="118" x2="118" y2="124" stroke={iconColor} strokeWidth="1.5"/>
+                <line x1="184" y1="118" x2="184" y2="124" stroke={iconColor} strokeWidth="1.5"/>
+                {/* Sink */}
+                <rect x="96" y="72" width="68" height="20" rx="3" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                <circle cx="130" cy="82" r="4" fill="none" stroke={iconColor} strokeWidth="1"/>
+                <line x1="130" y1="72" x2="130" y2="62" stroke={iconColor} strokeWidth="1.2"/>
+                {/* Upper cabinets */}
+                <rect x="20" y="22" width="220" height="42" rx="3" fill="none" stroke={iconColor} strokeWidth="1.5"/>
+                <line x1="90" y1="22" x2="90" y2="64" stroke={iconColor} strokeWidth="1"/>
+                <line x1="170" y1="22" x2="170" y2="64" stroke={iconColor} strokeWidth="1"/>
+                <line x1="55" y1="43" x2="55" y2="50" stroke={iconColor} strokeWidth="1.5"/>
+                <line x1="130" y1="43" x2="130" y2="50" stroke={iconColor} strokeWidth="1.5"/>
+                <line x1="205" y1="43" x2="205" y2="50" stroke={iconColor} strokeWidth="1.5"/>
+                {/* Stove / cooktop circles */}
+                <circle cx="48" cy="82" r="12" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+                <circle cx="48" cy="82" r="6" fill="none" stroke={iconColor} strokeWidth="1"/>
+                <circle cx="78" cy="82" r="8" fill="none" stroke={iconColor} strokeWidth="1.2"/>
+              </svg>
+            ),
+          };
+
+          const scene = scenes[room.tag] || scenes['Living Room'];
+
+          return (
+            <div
+              key={room.id}
+              style={{ breakInside: 'avoid', marginBottom: '1rem', position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
+              onClick={() => !room.isPlaceholder && openDetail(room)}
+              onMouseEnter={(e) => { e.currentTarget.querySelector('.gallery-img').style.transform = 'scale(1.04)'; }}
+              onMouseLeave={(e) => { e.currentTarget.querySelector('.gallery-img').style.transform = 'scale(1)'; }}
+            >
+              <div
+                className="gallery-img"
+                style={{ width: '100%', height: h, background: gradient, transition: 'transform 0.55s ease', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+              >
+                {/* Real photo if available, else SVG scene */}
+                {allPhotos.length > 0
+                  ? <img src={allPhotos[0]} alt={room.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : scene
+                }
+                {/* Photo count badge */}
+                {allPhotos.length > 1 && (
+                  <div style={{ position: 'absolute', top: '0.75rem', right: '0.75rem', background: 'rgba(10,20,32,0.65)', color: 'white', fontSize: '0.65rem', letterSpacing: '0.1em', padding: '0.25rem 0.6rem', fontWeight: 700 }}>
+                    {allPhotos.length} photos
+                  </div>
+                )}
+                {/* "View idea" prompt on non-placeholder cards */}
+                {!room.isPlaceholder && (
+                  <div style={{ position: 'absolute', bottom: '3.5rem', right: '1rem', background: 'rgba(240,160,112,0.9)', color: '#0f1e2e', fontSize: '0.62rem', letterSpacing: '0.15em', textTransform: 'uppercase', padding: '0.3rem 0.65rem', fontWeight: 700 }}>
+                    View Details →
+                  </div>
+                )}
+              </div>
+
+              {/* Text overlay */}
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,20,32,0.90) 0%, rgba(10,20,32,0.25) 38%, transparent 58%)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '1.25rem' }}>
+                <span style={{ fontSize: '0.65rem', letterSpacing: '0.28em', textTransform: 'uppercase', color: '#f0a070', marginBottom: '0.3rem', fontWeight: 700 }}>{room.tag}</span>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 600, color: '#f8f4ee', marginBottom: '0.2rem', lineHeight: 1.2 }}>{room.title}</h3>
+                <p style={{ fontSize: '0.77rem', color: 'rgba(214,232,245,0.72)', fontWeight: 400 }}>{room.description}</p>
+              </div>
             </div>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,30,46,0.85) 0%, transparent 55%)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '1.25rem' }}>
-              <span style={{ fontSize: '0.68rem', letterSpacing: '0.25em', textTransform: 'uppercase', color: '#f0a070', marginBottom: '0.35rem', fontWeight: 700 }}>{room.tag}</span>
-              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 600, color: '#f8f4ee', marginBottom: '0.25rem' }}>{room.title}</h3>
-              <p style={{ fontSize: '0.78rem', color: 'rgba(214,232,245,0.7)', fontWeight: 400 }}>{room.desc}</p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </section>
 
       {/* ── SERVICES STRIP ── */}
@@ -250,6 +478,121 @@ export default function CustomerInspiration() {
           <span style={{ fontSize: '0.82rem', color: 'rgba(214,232,245,0.45)' }}>© 2026 Chic Furnish · Auckland, New Zealand</span>
         </div>
       </footer>
+
+      {/* ── ROOM IDEA DETAIL MODAL ── */}
+      {detailCard && (() => {
+        const allPhotos = [detailCard.photo_url, ...(detailCard.photos || [])].filter(Boolean);
+        const featuredProducts = allListings.filter((l) => (detailCard.listing_ids || []).includes(l.id));
+        return (
+          <div className="modal-overlay" onClick={() => setDetailCard(null)} style={{ alignItems: 'flex-start', padding: '1.5rem', overflowY: 'auto' }}>
+            <div style={{ background: '#f8f4ee', width: '100%', maxWidth: 900, border: '2px solid #b8c8d8', margin: 'auto' }} onClick={(e) => e.stopPropagation()}>
+
+              {/* Header bar */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', background: '#1a3a5c' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: '#d6e8f5', letterSpacing: '0.15em' }}>CHIC <span style={{ color: '#f0a070' }}>FURNISH</span></span>
+                  <span style={{ fontSize: '0.62rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: '#f0a070', fontWeight: 700, padding: '0.2rem 0.6rem', background: 'rgba(240,160,112,0.15)' }}>{detailCard.tag}</span>
+                </div>
+                <button onClick={() => setDetailCard(null)} style={{ background: 'none', border: '1.5px solid rgba(214,232,245,0.35)', color: '#d6e8f5', padding: '0.4rem 0.9rem', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em' }}>✕ CLOSE</button>
+              </div>
+
+              {/* Room photo + thumbnails */}
+              <div style={{ padding: '1.5rem', borderBottom: '1.5px solid #b8c8d8' }}>
+                <div style={{ aspectRatio: '16/7', background: TAG_GRADIENTS[detailCard.tag] || '#d6e8f5', overflow: 'hidden', position: 'relative' }}>
+                  {detailPhoto
+                    ? <img src={detailPhoto} alt={detailCard.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ fontFamily: 'var(--font-display)', color: 'rgba(26,58,92,0.3)', letterSpacing: '0.3em' }}>{detailCard.tag.toUpperCase()}</span>
+                      </div>
+                  }
+                </div>
+                {allPhotos.length > 1 && (
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                    {allPhotos.map((photo, idx) => (
+                      <div key={idx} onClick={() => setDetailPhoto(photo)} style={{ width: 72, height: 52, cursor: 'pointer', overflow: 'hidden', flexShrink: 0, outline: detailPhoto === photo ? '2.5px solid #1a3a5c' : '2px solid #b8c8d8', outlineOffset: '1px', transition: 'outline 0.15s' }}>
+                        <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Title + description */}
+              <div style={{ padding: '1.5rem 1.5rem 1rem', borderBottom: featuredProducts.length > 0 ? '1.5px solid #b8c8d8' : 'none' }}>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 600, color: '#0f1e2e', marginBottom: '0.5rem' }}>{detailCard.title}</h2>
+                {detailCard.description && <p style={{ fontSize: '0.95rem', color: '#2a3d52', lineHeight: 1.9 }}>{detailCard.description}</p>}
+              </div>
+
+              {/* ── SHOP THIS LOOK ── */}
+              {featuredProducts.length > 0 && (
+                <div style={{ padding: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.1rem' }}>
+                    <p style={{ fontSize: '0.7rem', letterSpacing: '0.28em', textTransform: 'uppercase', color: '#1a3a5c', fontWeight: 700 }}>Shop this look</p>
+                    <div style={{ flex: 1, height: '1px', background: '#b8c8d8' }} />
+                    <span style={{ fontSize: '0.72rem', color: '#4a5e72', fontWeight: 600 }}>{featuredProducts.length} {featuredProducts.length === 1 ? 'piece' : 'pieces'}</span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: '0.85rem' }}>
+                    {featuredProducts.map((product) => {
+                      const inCart = cart.find((c) => c.id === product.id);
+                      return (
+                        <div key={product.id} style={{ background: 'white', border: '2px solid #b8c8d8', overflow: 'hidden' }}>
+                          <div style={{ height: 130, background: '#d6e8f5', overflow: 'hidden' }}>
+                            {product.photo_url
+                              ? <img src={product.photo_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                              : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <span style={{ fontSize: '0.7rem', color: 'rgba(26,58,92,0.35)', letterSpacing: '0.15em', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>{product.category}</span>
+                                </div>
+                            }
+                          </div>
+                          <div style={{ padding: '0.75rem' }}>
+                            <p style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f1e2e', lineHeight: 1.3, marginBottom: '0.25rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{product.name}</p>
+                            <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', fontWeight: 600, color: '#c04a1a', marginBottom: '0.6rem' }}>${Number(product.price).toLocaleString()} <span style={{ fontSize: '0.7rem', color: '#4a5e72', fontFamily: 'var(--font-body)', fontWeight: 700 }}>NZD</span></p>
+                            <button
+                              onClick={() => addToCart(product)}
+                              style={{ width: '100%', padding: '0.5rem', background: inCart ? '#eef5fb' : '#1a3a5c', color: inCart ? '#1a3a5c' : '#f0d8c8', border: inCart ? '1.5px solid #b8c8d8' : 'none', fontFamily: 'var(--font-body)', fontSize: '0.68rem', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+                            >
+                              {inCart ? '✓ In Cart' : 'Add to Cart'}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {cart.length > 0 && (
+                    <div style={{ marginTop: '1.25rem', background: '#1a3a5c', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <p style={{ fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(214,232,245,0.6)', fontWeight: 700, marginBottom: '0.2rem' }}>{cart.length} item{cart.length > 1 ? 's' : ''} selected</p>
+                        <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', color: '#f0a070', fontWeight: 600 }}>
+                          ${cart.reduce((s, c) => s + Number(c.price), 0).toLocaleString()} NZD
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => { setDetailCard(null); navigate('/shop'); }}
+                        style={{ background: '#c04a1a', color: 'white', border: 'none', padding: '0.8rem 1.5rem', fontFamily: 'var(--font-body)', fontSize: '0.78rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        View in Shop →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Book staging CTA */}
+              <div style={{ padding: '1.25rem 1.5rem', borderTop: '1.5px solid #b8c8d8', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f0f5f8' }}>
+                <p style={{ fontSize: '0.88rem', color: '#2a3d52', fontWeight: 500 }}>Love this look? We can stage your property just like this.</p>
+                <button
+                  onClick={() => { setDetailCard(null); openStaging(); }}
+                  style={{ background: '#1a3a5c', color: '#f0d8c8', border: 'none', padding: '0.7rem 1.4rem', fontFamily: 'var(--font-body)', fontSize: '0.75rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', marginLeft: '1.5rem' }}
+                >
+                  Book a Staging →
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── REQUIRE LOGIN MODAL ── */}
       {requireLogin && (

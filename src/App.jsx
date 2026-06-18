@@ -7,6 +7,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminListings from './pages/admin/AdminListings';
 import AdminBookings from './pages/admin/AdminBookings';
 import AdminQuotes from './pages/admin/AdminQuotes';
+import AdminInspiration from './pages/admin/AdminInspiration';
 import CustomerInspiration from './pages/customer/CustomerInspiration';
 import CustomerShop from './pages/customer/CustomerShop';
 
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="/admin/listings" element={<AdminRoute><AdminListings /></AdminRoute>} />
           <Route path="/admin/bookings" element={<AdminRoute><AdminBookings /></AdminRoute>} />
           <Route path="/admin/quotes" element={<AdminRoute><AdminQuotes /></AdminRoute>} />
+          <Route path="/admin/inspiration" element={<AdminRoute><AdminInspiration /></AdminRoute>} />
 
           {/* Customer - both fully public, no login required to browse */}
           <Route path="/shop" element={<CustomerShop />} />
