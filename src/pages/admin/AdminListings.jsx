@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AdminSidebar from '../../components/AdminSidebar';
-import { getListings, saveListings } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 const CATEGORIES = ['All', 'sofa', 'table', 'rug', 'cupboard'];
-const EMPTY_FORM = { name: '', category: 'sofa', price: '', condition: 'New', status: 'available', desc: '' };
+const EMPTY_FORM = { name: '', category: 'sofa', price: '', condition: 'New', status: 'available', description: '' };
+const BUCKET = 'listing-photos';
 
 export default function AdminListings() {
   const [items, setItems] = useState([]);
@@ -11,55 +12,102 @@ export default function AdminListings() {
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const fileRef = useRef();
 
-  useEffect(() => { setItems(getListings()); }, []);
+  useEffect(() => { load(); }, []);
+
+  async function load() {
+    const { data } = await supabase.from('listings').select('*').order('created_at', { ascending: false });
+    setItems(data || []);
+  }
 
   const filtered = filter === 'All' ? items : items.filter((i) => i.category === filter);
 
   const openAdd = () => {
     setEditItem(null);
     setForm(EMPTY_FORM);
+    setPhotoFile(null);
+    setPhotoPreview(null);
     setShowModal(true);
   };
 
   const openEdit = (item) => {
     setEditItem(item);
-    setForm({ name: item.name, category: item.category, price: item.price, condition: item.condition, status: item.status, desc: item.desc });
+    setForm({ name: item.name, category: item.category, price: item.price, condition: item.condition, status: item.status, description: item.description || '' });
+    setPhotoFile(null);
+    setPhotoPreview(item.photo_url || null);
     setShowModal(true);
   };
 
-  const handleSave = () => {
-    if (!form.name.trim() || !form.price) return;
-    let updated;
-    if (editItem) {
-      updated = items.map((i) => i.id === editItem.id ? { ...i, ...form, price: Number(form.price) } : i);
-    } else {
-      updated = [...items, { ...form, id: Date.now().toString(), price: Number(form.price) }];
-    }
-    setItems(updated);
-    saveListings(updated);
-    setShowModal(false);
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
   };
 
-  const handleDelete = (id) => {
+  const uploadPhoto = async (file) => {
+    const ext = file.name.split('.').pop();
+    const path = `${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: false });
+    if (error) { console.error(error); return null; }
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+    return data.publicUrl;
+  };
+
+  const handleSave = async () => {
+    if (!form.name.trim() || !form.price) return;
+    setSaving(true);
+
+    let photo_url = editItem?.photo_url || null;
+    if (photoFile) {
+      const uploaded = await uploadPhoto(photoFile);
+      if (uploaded) photo_url = uploaded;
+    }
+
+    const payload = {
+      name: form.name.trim(),
+      category: form.category,
+      price: Number(form.price),
+      condition: form.condition,
+      status: form.status,
+      description: form.description,
+      photo_url,
+    };
+
+    if (editItem) {
+      await supabase.from('listings').update(payload).eq('id', editItem.id);
+    } else {
+      await supabase.from('listings').insert(payload);
+    }
+
+    setSaving(false);
+    setShowModal(false);
+    load();
+  };
+
+  const handleDelete = async (id) => {
     if (!window.confirm('Remove this listing?')) return;
-    const updated = items.filter((i) => i.id !== id);
-    setItems(updated);
-    saveListings(updated);
+    await supabase.from('listings').delete().eq('id', id);
+    setItems((prev) => prev.filter((i) => i.id !== id));
   };
 
   const tabStyle = (cat) => ({
     padding: '0.6rem 1.2rem',
-    background: filter === cat ? 'var(--dark)' : 'transparent',
-    color: filter === cat ? 'var(--gold)' : 'var(--warm-gray)',
-    border: '0.5px solid var(--border)',
-    marginRight: '-0.5px',
+    background: filter === cat ? 'var(--blue)' : 'transparent',
+    color: filter === cat ? '#f0d8c8' : 'var(--ink-muted)',
+    border: '1.5px solid var(--border)',
+    marginRight: '-1px',
     cursor: 'pointer',
     fontFamily: 'var(--font-body)',
     fontSize: '0.72rem',
     letterSpacing: '0.15em',
     textTransform: 'uppercase',
     transition: 'all 0.2s',
+    fontWeight: 600,
   });
 
   return (
@@ -83,7 +131,7 @@ export default function AdminListings() {
         <div className="card">
           {filtered.length === 0 ? (
             <div style={{ padding: '3rem', textAlign: 'center' }}>
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 300, color: 'var(--warm-gray)', marginBottom: '1rem' }}>
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', color: 'var(--ink-muted)', marginBottom: '1rem' }}>
                 No listings yet
               </p>
               <p className="text-muted" style={{ marginBottom: '1.5rem' }}>Add your first furniture item to get started.</p>
@@ -93,6 +141,7 @@ export default function AdminListings() {
             <table className="data-table">
               <thead>
                 <tr>
+                  <th>Photo</th>
                   <th>Name & Description</th>
                   <th>Category</th>
                   <th>Price (NZD)</th>
@@ -104,12 +153,17 @@ export default function AdminListings() {
               <tbody>
                 {filtered.map((item) => (
                   <tr key={item.id}>
+                    <td style={{ width: 64 }}>
+                      {item.photo_url
+                        ? <img src={item.photo_url} alt={item.name} style={{ width: 56, height: 48, objectFit: 'cover', border: '1.5px solid var(--border)' }} />
+                        : <div style={{ width: 56, height: 48, background: 'var(--blue-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', color: 'var(--ink-muted)', letterSpacing: '0.1em' }}>NO IMG</div>}
+                    </td>
                     <td>
-                      <div style={{ fontWeight: 400 }}>{item.name}</div>
-                      {item.desc && <div style={{ fontSize: '0.75rem', color: 'var(--warm-gray)', marginTop: '0.2rem' }}>{item.desc}</div>}
+                      <div style={{ fontWeight: 600 }}>{item.name}</div>
+                      {item.description && <div style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: '0.2rem' }}>{item.description}</div>}
                     </td>
                     <td style={{ textTransform: 'capitalize' }}>{item.category}</td>
-                    <td style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: 'var(--gold-dark)' }}>
+                    <td style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: 'var(--rust)' }}>
                       ${Number(item.price).toLocaleString()}
                     </td>
                     <td>
@@ -135,8 +189,34 @@ export default function AdminListings() {
 
         {showModal && (
           <div className="modal-overlay" onClick={() => setShowModal(false)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal" style={{ maxWidth: 580 }} onClick={(e) => e.stopPropagation()}>
               <h2 className="modal-title">{editItem ? 'Edit Listing' : 'Add New Listing'}</h2>
+
+              {/* Photo upload */}
+              <div className="form-group">
+                <label className="form-label">Product Photo</label>
+                <div
+                  onClick={() => fileRef.current.click()}
+                  style={{
+                    border: '2px dashed var(--border)', padding: '1rem', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '1rem',
+                    background: photoPreview ? 'transparent' : 'var(--blue-pale)',
+                    transition: 'border-color 0.2s',
+                  }}
+                >
+                  {photoPreview
+                    ? <img src={photoPreview} alt="preview" style={{ width: 80, height: 64, objectFit: 'cover' }} />
+                    : <div style={{ width: 80, height: 64, background: 'var(--blue-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', color: 'var(--blue-mid)' }}>＋</div>}
+                  <div>
+                    <p style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--ink-mid)' }}>
+                      {photoPreview ? 'Click to change photo' : 'Click to upload photo'}
+                    </p>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--ink-muted)', marginTop: '0.2rem' }}>JPG, PNG, WEBP — max 5 MB</p>
+                  </div>
+                </div>
+                <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
+              </div>
+
               <div className="form-group">
                 <label className="form-label">Product Name *</label>
                 <input className="form-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Maison L-Shaped Sofa" />
@@ -174,12 +254,12 @@ export default function AdminListings() {
               </div>
               <div className="form-group">
                 <label className="form-label">Description</label>
-                <textarea className="form-textarea" value={form.desc} onChange={(e) => setForm({ ...form, desc: e.target.value })} placeholder="Fabric, dimensions, colour, any details..." />
+                <textarea className="form-textarea" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Fabric, dimensions, colour, any details…" />
               </div>
               <div className="flex-gap" style={{ justifyContent: 'flex-end' }}>
                 <button className="btn btn-ghost" onClick={() => setShowModal(false)}>Cancel</button>
-                <button className="btn btn-dark" onClick={handleSave}>
-                  {editItem ? 'Save Changes' : 'Add Listing'}
+                <button className="btn btn-dark" onClick={handleSave} disabled={saving} style={{ opacity: saving ? 0.7 : 1 }}>
+                  {saving ? 'Saving…' : editItem ? 'Save Changes' : 'Add Listing'}
                 </button>
               </div>
             </div>

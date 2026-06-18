@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminSidebar from '../../components/AdminSidebar';
-import { getStagingBookings, saveStagingBookings } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 export default function AdminQuotes() {
   const [bookings, setBookings] = useState([]);
@@ -8,12 +8,19 @@ export default function AdminQuotes() {
   const [detailModal, setDetailModal] = useState(null);
   const [quoteForm, setQuoteForm] = useState({ amount: '', breakdown: '', message: '' });
 
-  useEffect(() => { setBookings(getStagingBookings()); }, []);
+  useEffect(() => { load(); }, []);
 
-  const updateStatus = (id, status) => {
-    const updated = bookings.map((b) => b.id === id ? { ...b, status } : b);
-    setBookings(updated);
-    saveStagingBookings(updated);
+  async function load() {
+    const { data } = await supabase
+      .from('staging_bookings')
+      .select('*')
+      .order('created_at', { ascending: false });
+    setBookings(data || []);
+  }
+
+  const updateStatus = async (id, status) => {
+    await supabase.from('staging_bookings').update({ status }).eq('id', id);
+    setBookings((prev) => prev.map((b) => b.id === id ? { ...b, status } : b));
   };
 
   const openQuoteModal = (booking) => {
@@ -25,15 +32,16 @@ export default function AdminQuotes() {
     });
   };
 
-  const sendQuote = () => {
+  const sendQuote = async () => {
     if (!quoteForm.amount) return;
-    const updated = bookings.map((b) =>
-      b.id === quoteModal.id
-        ? { ...b, quoteSent: true, quoteAmount: Number(quoteForm.amount), quoteBreakdown: quoteForm.breakdown, status: 'confirmed' }
-        : b
-    );
-    setBookings(updated);
-    saveStagingBookings(updated);
+    const patch = {
+      quote_sent: true,
+      quote_amount: Number(quoteForm.amount),
+      quote_breakdown: quoteForm.breakdown,
+      status: 'confirmed',
+    };
+    await supabase.from('staging_bookings').update(patch).eq('id', quoteModal.id);
+    setBookings((prev) => prev.map((b) => b.id === quoteModal.id ? { ...b, ...patch } : b));
     setQuoteModal(null);
   };
 
@@ -49,7 +57,7 @@ export default function AdminQuotes() {
         <div className="card">
           {bookings.length === 0 ? (
             <div style={{ padding: '3rem', textAlign: 'center' }}>
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 300, color: 'var(--warm-gray)' }}>
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', color: 'var(--ink-muted)' }}>
                 No staging bookings yet
               </p>
               <p className="text-muted" style={{ marginTop: '0.5rem' }}>Bookings from the Inspiration page will appear here.</p>
@@ -64,21 +72,21 @@ export default function AdminQuotes() {
                   <tr key={b.id}>
                     <td>
                       <div>{b.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--warm-gray)' }}>{b.email}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>{b.email}</div>
                     </td>
                     <td style={{ fontSize: '0.82rem' }}>{b.service}</td>
-                    <td style={{ fontSize: '0.8rem', color: 'var(--warm-gray)', maxWidth: 160 }}>{b.address}</td>
+                    <td style={{ fontSize: '0.8rem', color: 'var(--ink-muted)', maxWidth: 160 }}>{b.address}</td>
                     <td>{b.date}</td>
                     <td>
-                      {b.quoteSent
-                        ? <span style={{ color: 'var(--gold-dark)', fontFamily: 'var(--font-display)', fontSize: '1rem' }}>${Number(b.quoteAmount).toLocaleString()}</span>
+                      {b.quote_sent
+                        ? <span style={{ color: 'var(--rust)', fontFamily: 'var(--font-display)', fontSize: '1rem' }}>${Number(b.quote_amount).toLocaleString()}</span>
                         : <span className="badge badge-new">Not sent</span>}
                     </td>
                     <td><span className={`badge badge-${b.status}`}>{b.status}</span></td>
                     <td>
                       <div className="flex-gap" style={{ gap: '0.4rem' }}>
                         <button className="btn btn-outline btn-sm" onClick={() => setDetailModal(b)}>View</button>
-                        {!b.quoteSent && (
+                        {!b.quote_sent && (
                           <button className="btn btn-gold btn-sm" onClick={() => openQuoteModal(b)}>Send Quote</button>
                         )}
                         {b.status === 'pending' && (
@@ -93,12 +101,11 @@ export default function AdminQuotes() {
           )}
         </div>
 
-        {/* Quote modal */}
         {quoteModal && (
           <div className="modal-overlay" onClick={() => setQuoteModal(null)}>
             <div className="modal" style={{ maxWidth: 620 }} onClick={(e) => e.stopPropagation()}>
               <h2 className="modal-title">Send Pricing Quote</h2>
-              <div style={{ background: 'var(--cream-deep)', padding: '1rem', marginBottom: '1.5rem', borderLeft: '2px solid var(--gold)', fontSize: '0.85rem' }}>
+              <div style={{ background: 'var(--cream-deep)', padding: '1rem', marginBottom: '1.5rem', borderLeft: '2px solid var(--rust)', fontSize: '0.85rem' }}>
                 <strong>{quoteModal.name}</strong> — {quoteModal.service} · {quoteModal.address}
               </div>
               <div className="form-group">
@@ -121,7 +128,6 @@ export default function AdminQuotes() {
           </div>
         )}
 
-        {/* Detail modal */}
         {detailModal && (
           <div className="modal-overlay" onClick={() => setDetailModal(null)}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -135,7 +141,7 @@ export default function AdminQuotes() {
                   { label: 'Property', value: detailModal.address },
                   { label: 'Date', value: detailModal.date },
                   { label: 'Status', value: detailModal.status },
-                  { label: 'Quote', value: detailModal.quoteSent ? `$${Number(detailModal.quoteAmount).toLocaleString()}` : 'Not sent' },
+                  { label: 'Quote', value: detailModal.quote_sent ? `$${Number(detailModal.quote_amount).toLocaleString()}` : 'Not sent' },
                 ].map((f) => (
                   <div key={f.label}>
                     <div className="form-label">{f.label}</div>
@@ -146,13 +152,13 @@ export default function AdminQuotes() {
               {detailModal.notes && (
                 <div className="form-group">
                   <div className="form-label">Notes</div>
-                  <div style={{ fontSize: '0.88rem', color: 'var(--warm-gray)', lineHeight: 1.7 }}>{detailModal.notes}</div>
+                  <div style={{ fontSize: '0.88rem', color: 'var(--ink-muted)', lineHeight: 1.7 }}>{detailModal.notes}</div>
                 </div>
               )}
-              {detailModal.quoteBreakdown && (
+              {detailModal.quote_breakdown && (
                 <div className="form-group">
                   <div className="form-label">Quote Breakdown</div>
-                  <div style={{ fontSize: '0.88rem', color: 'var(--warm-gray)', lineHeight: 1.7 }}>{detailModal.quoteBreakdown}</div>
+                  <div style={{ fontSize: '0.88rem', color: 'var(--ink-muted)', lineHeight: 1.7 }}>{detailModal.quote_breakdown}</div>
                 </div>
               )}
               <div className="flex-gap" style={{ justifyContent: 'flex-end' }}>

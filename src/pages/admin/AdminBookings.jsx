@@ -1,17 +1,24 @@
 import { useState, useEffect } from 'react';
 import AdminSidebar from '../../components/AdminSidebar';
-import { getViewingBookings, saveViewingBookings } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 export default function AdminBookings() {
   const [bookings, setBookings] = useState([]);
   const [selected, setSelected] = useState(null);
 
-  useEffect(() => { setBookings(getViewingBookings()); }, []);
+  useEffect(() => { load(); }, []);
 
-  const updateStatus = (id, status) => {
-    const updated = bookings.map((b) => b.id === id ? { ...b, status } : b);
-    setBookings(updated);
-    saveViewingBookings(updated);
+  async function load() {
+    const { data } = await supabase
+      .from('viewing_bookings')
+      .select('*')
+      .order('created_at', { ascending: false });
+    setBookings(data || []);
+  }
+
+  const updateStatus = async (id, status) => {
+    await supabase.from('viewing_bookings').update({ status }).eq('id', id);
+    setBookings((prev) => prev.map((b) => b.id === id ? { ...b, status } : b));
     setSelected(null);
   };
 
@@ -48,7 +55,7 @@ export default function AdminBookings() {
         <div className="card">
           {bookings.length === 0 ? (
             <div style={{ padding: '3rem', textAlign: 'center' }}>
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 300, color: 'var(--warm-gray)' }}>
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', color: 'var(--ink-muted)' }}>
                 No viewing requests yet
               </p>
               <p className="text-muted" style={{ marginTop: '0.5rem' }}>Requests from customers will appear here.</p>
@@ -61,12 +68,12 @@ export default function AdminBookings() {
               <tbody>
                 {bookings.map((b) => (
                   <tr key={b.id}>
-                    <td style={{ color: 'var(--gold-dark)', fontSize: '0.78rem' }}>{b.id}</td>
+                    <td style={{ color: 'var(--rust)', fontSize: '0.78rem' }}>{b.id}</td>
                     <td>
-                      <div>{b.customerName}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--warm-gray)' }}>{b.customerEmail}</div>
+                      <div>{b.customer_name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>{b.customer_email}</div>
                     </td>
-                    <td>{b.listingName}</td>
+                    <td>{b.listing_name}</td>
                     <td>{b.date}</td>
                     <td>{b.time}</td>
                     <td><span className={`badge badge-${b.status}`}>{b.status}</span></td>
@@ -99,10 +106,10 @@ export default function AdminBookings() {
                 {[
                   { label: 'Booking ID', value: selected.id },
                   { label: 'Status', value: selected.status },
-                  { label: 'Customer Name', value: selected.customerName },
-                  { label: 'Email', value: selected.customerEmail },
-                  { label: 'Phone', value: selected.customerPhone || '—' },
-                  { label: 'Item', value: selected.listingName },
+                  { label: 'Customer Name', value: selected.customer_name },
+                  { label: 'Email', value: selected.customer_email },
+                  { label: 'Phone', value: selected.customer_phone || '—' },
+                  { label: 'Item', value: selected.listing_name },
                   { label: 'Preferred Date', value: selected.date },
                   { label: 'Preferred Time', value: selected.time },
                 ].map((f) => (

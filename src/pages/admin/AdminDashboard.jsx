@@ -8,9 +8,13 @@ export default function AdminDashboard() {
   const [staging, setStaging] = useState([]);
 
   useEffect(() => {
-    setListings(getListings());
-    setViewings(getViewingBookings());
-    setStaging(getStagingBookings());
+    async function load() {
+      const [l, v, s] = await Promise.all([getListings(), getViewingBookings(), getStagingBookings()]);
+      setListings(l);
+      setViewings(v);
+      setStaging(s);
+    }
+    load();
   }, []);
 
   const stats = [
@@ -38,7 +42,6 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Recent viewing requests */}
         <div className="card mb-2">
           <div className="flex-between mb-1">
             <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: '1.2rem' }}>Recent Viewing Requests</h2>
@@ -53,8 +56,8 @@ export default function AdminDashboard() {
               <tbody>
                 {viewings.slice(0, 5).map((v) => (
                   <tr key={v.id}>
-                    <td>{v.customerName}</td>
-                    <td>{v.listingName}</td>
+                    <td>{v.customer_name}</td>
+                    <td>{v.listing_name}</td>
                     <td>{v.date}</td>
                     <td><span className={`badge badge-${v.status}`}>{v.status}</span></td>
                   </tr>
@@ -64,7 +67,6 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* Recent staging bookings */}
         <div className="card">
           <div className="flex-between mb-1">
             <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, fontSize: '1.2rem' }}>Recent Staging Bookings</h2>
@@ -82,7 +84,7 @@ export default function AdminDashboard() {
                     <td>{s.name}</td>
                     <td>{s.service}</td>
                     <td>{s.date}</td>
-                    <td>{s.quoteAmount ? `$${Number(s.quoteAmount).toLocaleString()}` : '—'}</td>
+                    <td>{s.quote_amount ? `$${Number(s.quote_amount).toLocaleString()}` : '—'}</td>
                     <td><span className={`badge badge-${s.status}`}>{s.status}</span></td>
                   </tr>
                 ))}

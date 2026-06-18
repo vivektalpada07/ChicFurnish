@@ -1,48 +1,66 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
+const ADMIN_EMAIL = 'admin@chicfurnish.co.nz';
+
+function buildUser(sbUser) {
+  return {
+    id: sbUser.id,
+    email: sbUser.email,
+    name: sbUser.user_metadata?.name || sbUser.email.split('@')[0],
+    phone: sbUser.user_metadata?.phone || '',
+    role: sbUser.email === ADMIN_EMAIL ? 'admin' : 'customer',
+  };
+}
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('cf_user');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const users = JSON.parse(localStorage.getItem('cf_users') || '[]');
-    const adminExists = users.find((u) => u.role === 'admin');
-    if (!adminExists) {
-      users.push({ id: 'admin-1', name: 'Admin', email: 'admin@chicfurnish.co.nz', password: 'admin123', role: 'admin' });
-      localStorage.setItem('cf_users', JSON.stringify(users));
-    }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ? buildUser(session.user) : null);
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ? buildUser(session.user) : null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const register = (name, email, password) => {
-    const users = JSON.parse(localStorage.getItem('cf_users') || '[]');
-    if (users.find((u) => u.email === email)) return { error: 'Email already registered.' };
-    const newUser = { id: Date.now().toString(), name, email, password, role: 'customer' };
-    users.push(newUser);
-    localStorage.setItem('cf_users', JSON.stringify(users));
-    const { password: _, ...safe } = newUser;
-    setUser(safe);
-    localStorage.setItem('cf_user', JSON.stringify(safe));
+  const register = async (name, email, password, phone) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name, phone: phone || '' } },
+    });
+    if (error) return { error: error.message };
     return { success: true };
   };
 
-  const login = (email, password) => {
-    const users = JSON.parse(localStorage.getItem('cf_users') || '[]');
-    const found = users.find((u) => u.email === email && u.password === password);
-    if (!found) return { error: 'Incorrect email or password.' };
-    const { password: _, ...safe } = found;
-    setUser(safe);
-    localStorage.setItem('cf_user', JSON.stringify(safe));
-    return { success: true, role: found.role };
+  const login = async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: 'Incorrect email or password.' };
+    const role = data.user.email === ADMIN_EMAIL ? 'admin' : 'customer';
+    return { success: true, role };
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('cf_user');
   };
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8f4ee' }}>
+        <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', color: '#1a3a5c', letterSpacing: '0.2em' }}>Loading…</p>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ user, login, logout, register }}>
@@ -51,25 +69,33 @@ export function AuthProvider({ children }) {
   );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
+export function useAuth() { return useContext(AuthContext); }
+
+/* ── Data helpers ──────────────────────────────────────── */
+
+export async function getListings() {
+  const { data, error } = await supabase
+    .from('listings')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); return []; }
+  return data;
 }
 
-export function getListings() {
-  return JSON.parse(localStorage.getItem('cf_listings') || '[]');
+export async function getViewingBookings() {
+  const { data, error } = await supabase
+    .from('viewing_bookings')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); return []; }
+  return data;
 }
-export function saveListings(l) {
-  localStorage.setItem('cf_listings', JSON.stringify(l));
-}
-export function getViewingBookings() {
-  return JSON.parse(localStorage.getItem('cf_viewings') || '[]');
-}
-export function saveViewingBookings(b) {
-  localStorage.setItem('cf_viewings', JSON.stringify(b));
-}
-export function getStagingBookings() {
-  return JSON.parse(localStorage.getItem('cf_staging') || '[]');
-}
-export function saveStagingBookings(b) {
-  localStorage.setItem('cf_staging', JSON.stringify(b));
+
+export async function getStagingBookings() {
+  const { data, error } = await supabase
+    .from('staging_bookings')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); return []; }
+  return data;
 }

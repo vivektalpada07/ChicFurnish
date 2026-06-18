@@ -8,10 +8,14 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
 
-  const handleSubmit = () => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
     setError('');
     if (!form.email || !form.password) { setError('Please fill in all fields.'); return; }
-    const result = login(form.email, form.password);
+    setSubmitting(true);
+    const result = await login(form.email, form.password);
+    setSubmitting(false);
     if (result.error) { setError(result.error); return; }
     if (result.role === 'admin') navigate('/admin');
     else navigate('/shop');
@@ -20,7 +24,7 @@ export default function Login() {
   const linkBtn = {
     background: 'none',
     border: 'none',
-    color: 'var(--gold-dark)',
+    color: 'var(--rust)',
     fontWeight: 500,
     cursor: 'pointer',
     fontFamily: 'var(--font-body)',
@@ -71,8 +75,8 @@ export default function Login() {
           />
         </div>
 
-        <button className="btn btn-dark btn-full" style={{ padding: '1rem', marginTop: '0.5rem' }} onClick={handleSubmit}>
-          Sign In
+        <button className="btn btn-dark btn-full" style={{ padding: '1rem', marginTop: '0.5rem', opacity: submitting ? 0.7 : 1 }} onClick={handleSubmit} disabled={submitting}>
+          {submitting ? 'Signing in…' : 'Sign In'}
         </button>
 
         <div className="auth-switch">
