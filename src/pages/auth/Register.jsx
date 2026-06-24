@@ -49,14 +49,14 @@ export default function Register() {
     if (isDisposable(trimmed)) { setError('Please use a real email address — disposable or temporary emails are not accepted.'); return; }
 
     setLoading(true);
-    const { data, error: err } = await supabase.functions.invoke('send-otp', {
-      body: { email: trimmed },
+    const { error: err } = await supabase.auth.signInWithOtp({
+      email: trimmed,
+      options: { shouldCreateUser: true },
     });
     setLoading(false);
 
-    if (err || data?.error) {
-      const msg = data?.error || err?.message || '';
-      if (msg.includes('rate') || msg.includes('limit')) {
+    if (err) {
+      if (err.message.includes('rate')) {
         setError('Too many attempts. Please wait a minute and try again.');
       } else {
         setError('Could not send a code to that address. Please check your email and try again.');
@@ -75,13 +75,15 @@ export default function Register() {
     if (otp.length !== 6 || !/^\d{6}$/.test(otp)) { setError('Please enter the 6-digit code from your email.'); return; }
 
     setLoading(true);
-    const { data, error: err } = await supabase.functions.invoke('verify-otp', {
-      body: { email, code: otp },
+    const { error: err } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: 'email',
     });
     setLoading(false);
 
-    if (err || data?.error) {
-      setError(data?.error || 'Incorrect or expired code. Please check your email and try again.');
+    if (err) {
+      setError('Incorrect or expired code. Please check your email and try again.');
       return;
     }
 
@@ -93,7 +95,7 @@ export default function Register() {
     if (resendCooldown > 0) return;
     setError('');
     setLoading(true);
-    await supabase.functions.invoke('send-otp', { body: { email } });
+    await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
     setLoading(false);
     setOtp('');
     startResendCooldown();
@@ -118,22 +120,13 @@ export default function Register() {
     if (form.password !== form.confirm) { setError('Passwords do not match.'); return; }
 
     setLoading(true);
-    const { error: err } = await supabase.auth.signUp({
-      email,
+    const { error: err } = await supabase.auth.updateUser({
       password: form.password,
-      options: { data: { name: form.name.trim(), phone: form.phone.trim() } },
+      data: { name: form.name.trim(), phone: form.phone.trim() },
     });
     setLoading(false);
 
-    if (err) {
-      // "User already registered" — try signing in instead
-      if (err.message.includes('already registered')) {
-        setError('An account with this email already exists. Please sign in instead.');
-      } else {
-        setError(err.message);
-      }
-      return;
-    }
+    if (err) { setError(err.message); return; }
     navigate('/shop');
   };
 
