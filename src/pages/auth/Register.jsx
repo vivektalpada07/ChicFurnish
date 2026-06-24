@@ -51,7 +51,7 @@ export default function Register() {
     setLoading(true);
     const { error: err } = await supabase.auth.signInWithOtp({
       email: trimmed,
-      options: { shouldCreateUser: true },
+      options: { shouldCreateUser: true, emailRedirectTo: null },
     });
     setLoading(false);
 
