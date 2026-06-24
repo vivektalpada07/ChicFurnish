@@ -236,9 +236,21 @@ html { scroll-behavior: smooth; }
   }
 }
 
-@media (max-width: 680px) {
-  .sidebar { display: none; }
-  .main-content { margin-left: 0; padding: 1.5rem 1rem; }
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed !important;
+    left: -260px !important;
+    top: 0 !important;
+    height: 100vh !important;
+    width: 240px !important;
+    z-index: 300 !important;
+    transition: left 0.28s ease !important;
+    overflow-y: auto !important;
+    display: flex !important;
+  }
+  .sidebar-mobile-open { left: 0 !important; }
+  .main-content { margin-left: 0 !important; padding: 1.25rem 1rem; }
+  .page-layout { flex-direction: column; }
 
   .grid-2 { grid-template-columns: 1fr; }
 
