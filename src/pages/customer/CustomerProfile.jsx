@@ -14,7 +14,7 @@ export default function CustomerProfile() {
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
     fetchBookings();
-  }, [user]);
+  }, [user, navigate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchBookings = async () => {
     setLoading(true);
