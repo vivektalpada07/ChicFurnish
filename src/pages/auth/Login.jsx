@@ -100,6 +100,10 @@ export default function Login() {
           <button style={linkBtn} onClick={() => navigate('/register')}>Create one</button>
         </div>
 
+        <div className="auth-switch" style={{ marginTop: '0.5rem' }}>
+          <button style={linkBtn} onClick={() => navigate('/forgot-password')}>Forgot your password?</button>
+        </div>
+
         <div className="auth-switch" style={{ marginTop: '0.75rem' }}>
           <button style={{ ...linkBtn, fontWeight: 300 }} onClick={() => navigate('/shop')}>
             Continue browsing as guest →
