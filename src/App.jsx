@@ -12,6 +12,7 @@ import AdminQuotes from './pages/admin/AdminQuotes';
 import AdminInspiration from './pages/admin/AdminInspiration';
 import CustomerInspiration from './pages/customer/CustomerInspiration';
 import CustomerShop from './pages/customer/CustomerShop';
+import CustomerProfile from './pages/customer/CustomerProfile';
 
 function AdminRoute({ children }) {
   const { user } = useAuth();
@@ -41,6 +42,7 @@ export default function App() {
           {/* Customer - both fully public, no login required to browse */}
           <Route path="/shop" element={<CustomerShop />} />
           <Route path="/inspiration" element={<CustomerInspiration />} />
+          <Route path="/profile" element={<CustomerProfile />} />
 
           {/* Default landing page = shop */}
           <Route path="*" element={<Navigate to="/shop" replace />} />
