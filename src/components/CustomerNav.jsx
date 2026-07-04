@@ -49,6 +49,7 @@ export default function CustomerNav({ cartCount = 0, onCartClick }) {
         <div style={{ display: 'flex', gap: '2.5rem', alignItems: 'center' }} className="desktop-nav-links">
           <button style={linkStyle('/shop')} onClick={() => navigate('/shop')}>Buy Furniture</button>
           <button style={linkStyle('/inspiration')} onClick={() => navigate('/inspiration')}>Staging</button>
+          <button style={linkStyle('/contact')} onClick={() => navigate('/contact')}>Contact</button>
         </div>
 
         {/* Desktop right buttons */}
@@ -89,6 +90,7 @@ export default function CustomerNav({ cartCount = 0, onCartClick }) {
           <div style={{ background: '#f8f4ee', borderBottom: '2px solid #b8c8d8', padding: '0 1.5rem 1rem' }} onClick={(e) => e.stopPropagation()}>
             <button style={mobileLinkStyle('/shop')} onClick={() => { navigate('/shop'); setMenuOpen(false); }}>Buy Furniture</button>
             <button style={mobileLinkStyle('/inspiration')} onClick={() => { navigate('/inspiration'); setMenuOpen(false); }}>Staging</button>
+            <button style={mobileLinkStyle('/contact')} onClick={() => { navigate('/contact'); setMenuOpen(false); }}>Contact</button>
             <div style={{ padding: '1rem 0', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {user ? (
                 <>

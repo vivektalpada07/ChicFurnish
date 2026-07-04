@@ -13,6 +13,7 @@ import AdminInspiration from './pages/admin/AdminInspiration';
 import CustomerInspiration from './pages/customer/CustomerInspiration';
 import CustomerShop from './pages/customer/CustomerShop';
 import CustomerProfile from './pages/customer/CustomerProfile';
+import CustomerContact from './pages/customer/CustomerContact';
 
 function AdminRoute({ children }) {
   const { user } = useAuth();
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="/shop" element={<CustomerShop />} />
           <Route path="/inspiration" element={<CustomerInspiration />} />
           <Route path="/profile" element={<CustomerProfile />} />
+          <Route path="/contact" element={<CustomerContact />} />
 
           {/* Default landing page = shop */}
           <Route path="*" element={<Navigate to="/shop" replace />} />
