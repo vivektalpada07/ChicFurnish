@@ -55,7 +55,7 @@ export default function CustomerNav({ cartCount = 0, onCartClick }) {
         <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }} className="desktop-nav-links">
           {user ? (
             <>
-              <span style={{ fontSize: '0.88rem', color: '#0f1e2e', fontWeight: 600 }}>Hi, {user.name.split(' ')[0]}</span>
+              <button onClick={() => navigate('/profile')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.88rem', fontWeight: 600, color: '#0f1e2e' }}>Hi, {user.name.split(' ')[0]}</button>
               <button onClick={handleLogout} style={{ background: '#1a3a5c', border: 'none', color: '#f0d8c8', padding: '0.55rem 1.2rem', fontFamily: 'var(--font-body)', fontSize: '0.78rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer' }}>Sign Out</button>
             </>
           ) : (
@@ -92,7 +92,7 @@ export default function CustomerNav({ cartCount = 0, onCartClick }) {
             <div style={{ padding: '1rem 0', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {user ? (
                 <>
-                  <p style={{ fontSize: '0.88rem', color: '#4a5e72', fontWeight: 600 }}>Signed in as {user.name}</p>
+                  <button onClick={() => { navigate('/profile'); setMenuOpen(false); }} style={{ background: 'none', border: '1.5px solid #b8c8d8', color: '#0f1e2e', padding: '0.85rem', fontFamily: 'var(--font-body)', fontSize: '0.82rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer', width: '100%' }}>My Account</button>
                   <button onClick={handleLogout} style={{ background: '#1a3a5c', border: 'none', color: '#f0d8c8', padding: '0.85rem', fontFamily: 'var(--font-body)', fontSize: '0.82rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer', width: '100%' }}>Sign Out</button>
                 </>
               ) : (
