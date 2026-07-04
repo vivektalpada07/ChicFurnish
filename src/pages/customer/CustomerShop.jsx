@@ -33,6 +33,9 @@ export default function CustomerShop() {
   });
   const [checkoutError, setCheckoutError] = useState('');
 
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
+
   const [detailItem, setDetailItem] = useState(null);
   const [activePhoto, setActivePhoto] = useState(null);
 
@@ -50,9 +53,17 @@ export default function CustomerShop() {
       .then(({ data }) => setListings(data || []));
   }, []);
 
-  const filtered = listings.filter((item) =>
-    (activeCat === 'all' || item.category === activeCat) && item.status !== 'sold'
-  );
+  const filtered = listings
+    .filter((item) =>
+      (activeCat === 'all' || item.category === activeCat) &&
+      item.status !== 'sold' &&
+      (!search || item.name?.toLowerCase().includes(search.toLowerCase()) || item.description?.toLowerCase().includes(search.toLowerCase()))
+    )
+    .sort((a, b) => {
+      if (sortBy === 'price-asc') return Number(a.price) - Number(b.price);
+      if (sortBy === 'price-desc') return Number(b.price) - Number(a.price);
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
 
   const addToCart = (item) => { if (!cart.find((c) => c.id === item.id)) setCart([...cart, item]); };
   const removeFromCart = (id) => setCart(cart.filter((c) => c.id !== id));
@@ -158,9 +169,27 @@ export default function CustomerShop() {
       </section>
 
       {/* ── FILTER BAR ── */}
-      <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', padding: '1.1rem 3rem', borderBottom: '2px solid #b8c8d8', flexWrap: 'wrap', gap: '1rem' }}>
-        <div style={{ display: 'flex' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.1rem 3rem', borderBottom: '2px solid #b8c8d8', flexWrap: 'wrap', gap: '1rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap' }}>
           {CATS.map((c) => <button key={c.key} style={tabStyle(c.key)} onClick={() => setActiveCat(c.key)}>{c.label}</button>)}
+        </div>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Search furniture…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ padding: '0.5rem 1rem', border: '2px solid #b8c8d8', fontFamily: 'var(--font-body)', fontSize: '0.88rem', color: 'var(--ink)', outline: 'none', width: 200 }}
+          />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            style={{ padding: '0.5rem 0.75rem', border: '2px solid #b8c8d8', fontFamily: 'var(--font-body)', fontSize: '0.88rem', color: 'var(--ink)', background: 'white', cursor: 'pointer' }}
+          >
+            <option value="newest">Newest First</option>
+            <option value="price-asc">Price: Low → High</option>
+            <option value="price-desc">Price: High → Low</option>
+          </select>
         </div>
       </div>
 
@@ -168,8 +197,8 @@ export default function CustomerShop() {
       <div style={{ padding: '2.5rem 3rem 4rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: '1.5rem' }}>
         {filtered.length === 0 ? (
           <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '5rem 0' }}>
-            <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 600, color: '#1a3a5c', marginBottom: '0.75rem' }}>No items listed yet</p>
-            <p style={{ fontSize: '1rem', color: '#4a5e72', fontWeight: 500 }}>Check back soon — new pieces are added regularly.</p>
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 600, color: '#1a3a5c', marginBottom: '0.75rem' }}>{search ? `No results for "${search}"` : 'No items listed yet'}</p>
+            <p style={{ fontSize: '1rem', color: '#4a5e72', fontWeight: 500 }}>{search ? 'Try a different search term or browse all categories.' : 'Check back soon — new pieces are added regularly.'}</p>
           </div>
         ) : filtered.map((item) => (
           <div key={item.id}
