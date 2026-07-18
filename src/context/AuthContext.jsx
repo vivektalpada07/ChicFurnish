@@ -47,9 +47,9 @@ export function AuthProvider({ children }) {
     if (error) {
       console.error('Supabase login error:', error.message);
       if (error.message.includes('Email not confirmed')) {
-        return { error: 'Please confirm your email first, or disable email confirmation in Supabase.' };
+        return { error: 'Please check your inbox and confirm your email address before signing in.' };
       }
-      return { error: 'Incorrect email or password.' };
+      return { error: 'Incorrect email or password. Please try again.' };
     }
     const role = data.user.email === ADMIN_EMAIL ? 'admin' : 'customer';
     return { success: true, role };
