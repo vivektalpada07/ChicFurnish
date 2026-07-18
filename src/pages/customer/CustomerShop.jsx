@@ -157,7 +157,7 @@ export default function CustomerShop() {
       <CustomerNav cartCount={cart.length} onCartClick={openCart} />
 
       {/* ── PAGE HEADER ── */}
-      <section style={{ padding: '3rem 3rem 2rem', borderBottom: '2px solid #b8c8d8', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      <section className="shop-header" style={{ padding: '3rem 3rem 2rem', borderBottom: '2px solid #b8c8d8', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <p style={{ fontSize: '0.72rem', letterSpacing: '0.32em', textTransform: 'uppercase', color: '#c04a1a', fontWeight: 700, marginBottom: '0.5rem' }}>Chic Furnish · Auckland, NZ</p>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2rem,4vw,3rem)', fontWeight: 600, lineHeight: 1.1, color: '#0f1e2e' }}>
@@ -171,11 +171,11 @@ export default function CustomerShop() {
       </section>
 
       {/* ── FILTER BAR ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.1rem 3rem', borderBottom: '2px solid #b8c8d8', flexWrap: 'wrap', gap: '1rem' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+      <div className="shop-filter-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.1rem 3rem', borderBottom: '2px solid #b8c8d8', flexWrap: 'wrap', gap: '1rem' }}>
+        <div className="cat-tabs" style={{ display: 'flex', flexWrap: 'wrap' }}>
           {CATS.map((c) => <button key={c.key} style={tabStyle(c.key)} onClick={() => setActiveCat(c.key)}>{c.label}</button>)}
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <div className="search-sort" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           <input
             type="text"
             placeholder="Search furniture…"
@@ -196,7 +196,7 @@ export default function CustomerShop() {
       </div>
 
       {/* ── PRODUCTS GRID ── */}
-      <div style={{ padding: '2.5rem 3rem 4rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: '1.5rem' }}>
+      <div className="shop-grid" style={{ padding: '2.5rem 3rem 4rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: '1.5rem' }}>
         {filtered.length === 0 ? (
           <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '5rem 0' }}>
             <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 600, color: '#1a3a5c', marginBottom: '0.75rem' }}>{search ? `No results for "${search}"` : 'No items listed yet'}</p>

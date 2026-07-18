@@ -274,3 +274,62 @@ html { scroll-behavior: smooth; }
 @media (max-width: 480px) {
   .stat-grid { grid-template-columns: 1fr; }
 }
+
+/* ── CUSTOMER MOBILE ───────────────────────────────────── */
+@media (max-width: 680px) {
+  /* Shop page header */
+  .shop-header {
+    padding: 1.5rem 1rem !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+
+  /* Filter bar */
+  .shop-filter-bar {
+    padding: 0.75rem 1rem !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+  .shop-filter-bar .cat-tabs {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 0 !important;
+    padding-bottom: 2px !important;
+  }
+  .shop-filter-bar .search-sort {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.5rem !important;
+  }
+  .shop-filter-bar .search-sort input,
+  .shop-filter-bar .search-sort select {
+    width: 100% !important;
+    font-size: 0.82rem !important;
+  }
+
+  /* Product grid */
+  .shop-grid {
+    padding: 1.25rem 1rem 3rem !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Contact page */
+  .contact-layout {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
+
+  /* Auth pages */
+  .auth-panel-right { padding: 2rem 1.25rem !important; }
+
+  /* Profile page */
+  .profile-page { padding: 1.5rem 1rem !important; }
+
+  /* General page padding */
+  .customer-page-padding { padding: 1.5rem 1rem !important; }
+}

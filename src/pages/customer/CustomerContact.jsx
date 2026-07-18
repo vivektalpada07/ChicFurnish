@@ -44,7 +44,7 @@ export default function CustomerContact() {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '3rem', alignItems: 'start' }}>
+        <div className="contact-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '3rem', alignItems: 'start' }}>
 
           {/* Contact Info */}
           <div>
