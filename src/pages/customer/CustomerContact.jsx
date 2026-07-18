@@ -25,6 +25,7 @@ export default function CustomerContact() {
     setLoading(false);
 
     if (err) { setError('Something went wrong. Please try again.'); return; }
+    supabase.functions.invoke('notify-admin', { body: { type: 'enquiry', data: form } });
     setDone(true);
   };
 
