@@ -100,7 +100,7 @@ export default function CustomerShop() {
 
   const submitViewing = async () => {
     if (!viewingForm.date) return;
-    await supabase.from('viewing_bookings').insert({
+    const bookingData = {
       id: `VB-${Date.now()}`,
       listing_id: viewingModal.id,
       listing_name: viewingModal.name,
@@ -110,7 +110,9 @@ export default function CustomerShop() {
       date: viewingForm.date,
       time: viewingForm.time,
       status: 'pending',
-    });
+    };
+    await supabase.from('viewing_bookings').insert(bookingData);
+    supabase.functions.invoke('notify-admin', { body: { type: 'viewing', data: bookingData } });
     setViewingDone(true);
     setTimeout(() => setViewingModal(null), 2500);
   };

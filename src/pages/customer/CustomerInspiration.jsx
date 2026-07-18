@@ -147,7 +147,7 @@ export default function CustomerInspiration() {
 
   const handleSubmit = async () => {
     if (!form.name || !form.email || !form.address) return;
-    await supabase.from('staging_bookings').insert({
+    const bookingData = {
       id: `SB-${Date.now()}`,
       name: form.name,
       email: form.email,
@@ -158,7 +158,9 @@ export default function CustomerInspiration() {
       notes: form.notes,
       status: 'pending',
       quote_sent: false,
-    });
+    };
+    await supabase.from('staging_bookings').insert(bookingData);
+    supabase.functions.invoke('notify-admin', { body: { type: 'staging', data: bookingData } });
     setSubmitted(true);
     setTimeout(() => { setStagingModal(false); setSubmitted(false); setForm(EMPTY_FORM); }, 3000);
   };
