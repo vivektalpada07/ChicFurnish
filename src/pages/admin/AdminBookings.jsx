@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import AdminSidebar from '../../components/AdminSidebar';
 import { supabase } from '../../lib/supabase';
+import { getListings } from '../../context/AuthContext';
 
 export default function AdminBookings() {
   const [bookings, setBookings] = useState([]);
+  const [listings, setListings] = useState([]);
   const [selected, setSelected] = useState(null);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    getListings().then(setListings);
+  }, []);
 
   async function load() {
     const { data } = await supabase
@@ -19,6 +24,24 @@ export default function AdminBookings() {
   const updateStatus = async (id, status) => {
     await supabase.from('viewing_bookings').update({ status }).eq('id', id);
     setBookings((prev) => prev.map((b) => b.id === id ? { ...b, status } : b));
+
+    // Send customer email notification
+    const booking = bookings.find((b) => b.id === id);
+    if (booking && (status === 'confirmed' || status === 'declined')) {
+      const listing = listings.find((l) => l.id === booking.listing_id);
+      supabase.functions.invoke('notify-admin', {
+        body: {
+          type: status === 'confirmed' ? 'viewing-confirmed' : 'viewing-declined',
+          data: {
+            ...booking,
+            listing_price: listing?.price,
+            listing_description: listing?.description,
+            listing_condition: listing?.condition,
+          },
+        },
+      });
+    }
+
     setSelected(null);
   };
 
