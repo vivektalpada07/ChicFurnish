@@ -149,7 +149,6 @@ export default function CustomerProductDetail() {
                   onScroll={(e) => {
                     const idx = Math.round(e.target.scrollLeft / e.target.offsetWidth);
                     setSlideIndex(idx);
-                    setActivePhoto(allPhotos[idx]);
                   }}
                   style={{ display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch', height: '100%', scrollbarWidth: 'none' }}
                 >
@@ -166,7 +165,7 @@ export default function CustomerProductDetail() {
                     {allPhotos.map((_, i) => (
                       <button key={i} onClick={() => {
                         sliderRef.current?.scrollTo({ left: i * sliderRef.current.offsetWidth, behavior: 'smooth' });
-                        setSlideIndex(i); setActivePhoto(allPhotos[i]);
+                        setSlideIndex(i);
                       }} style={{ width: slideIndex === i ? 20 : 8, height: 8, borderRadius: 4, border: 'none', background: slideIndex === i ? 'white' : 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: 0, transition: 'all 0.2s' }} />
                     ))}
                   </div>
