@@ -80,11 +80,51 @@ export default function CustomerProductDetail() {
     <div style={{ minHeight: '100vh', background: '#f8f4ee' }}>
       <CustomerNav />
 
-      {/* Lightbox */}
-      {lightbox && activePhoto && (
-        <div onClick={() => setLightbox(false)} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.93)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <button onClick={() => setLightbox(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', fontSize: '1.3rem', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer' }}>✕</button>
-          <img src={activePhoto} alt="" style={{ maxWidth: '95vw', maxHeight: '92vh', objectFit: 'contain' }} onClick={(e) => e.stopPropagation()} />
+      {/* Lightbox — swipe slider */}
+      {lightbox && allPhotos.length > 0 && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.95)', display: 'flex', flexDirection: 'column' }}>
+          {/* Top bar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.25rem', flexShrink: 0 }}>
+            <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', fontFamily: 'var(--font-body)' }}>{slideIndex + 1} / {allPhotos.length}</span>
+            <button onClick={() => setLightbox(false)} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', color: 'white', width: 40, height: 40, borderRadius: '50%', cursor: 'pointer', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+          </div>
+
+          {/* Swipeable image strip */}
+          <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+            <div
+              style={{ display: 'flex', height: '100%', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}
+              ref={(el) => { if (el) el.scrollLeft = slideIndex * el.offsetWidth; }}
+              onScroll={(e) => {
+                const idx = Math.round(e.target.scrollLeft / e.target.offsetWidth);
+                if (idx !== slideIndex) { setSlideIndex(idx); setActivePhoto(allPhotos[idx]); }
+              }}
+            >
+              {allPhotos.map((photo, i) => (
+                <div key={i} style={{ minWidth: '100%', height: '100%', scrollSnapAlign: 'start', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem' }}>
+                  <img src={photo} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', userSelect: 'none' }} />
+                </div>
+              ))}
+            </div>
+
+            {/* Prev / Next arrows */}
+            {slideIndex > 0 && (
+              <button onClick={() => { const i = slideIndex - 1; setSlideIndex(i); setActivePhoto(allPhotos[i]); sliderRef.current?.scrollTo({ left: i * sliderRef.current.offsetWidth, behavior: 'smooth' }); }}
+                style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+            )}
+            {slideIndex < allPhotos.length - 1 && (
+              <button onClick={() => { const i = slideIndex + 1; setSlideIndex(i); setActivePhoto(allPhotos[i]); sliderRef.current?.scrollTo({ left: i * sliderRef.current.offsetWidth, behavior: 'smooth' }); }}
+                style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
+            )}
+          </div>
+
+          {/* Dot indicators */}
+          {allPhotos.length > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.4rem', padding: '0.75rem', flexShrink: 0 }}>
+              {allPhotos.map((_, i) => (
+                <div key={i} style={{ width: slideIndex === i ? 20 : 8, height: 8, borderRadius: 4, background: slideIndex === i ? 'white' : 'rgba(255,255,255,0.35)', transition: 'all 0.2s', cursor: 'pointer' }} onClick={() => { setSlideIndex(i); setActivePhoto(allPhotos[i]); }} />
+              ))}
+            </div>
+          )}
         </div>
       )}
 

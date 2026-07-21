@@ -394,6 +394,10 @@ html { scroll-behavior: smooth; }
   align-items: start;
 }
 
+/* Profile: show table on desktop, hide cards */
+.profile-table-wrap { display: block; }
+.profile-cards-wrap { display: none; }
+
 @media (min-width: 681px) {
   .pdp-layout {
     grid-template-columns: 55% 1fr;
@@ -570,6 +574,10 @@ html { scroll-behavior: smooth; }
 
   /* General page padding */
   .customer-page-padding { padding: 1.5rem 1rem !important; }
+
+  /* Profile page — hide table, show cards */
+  .profile-table-wrap { display: none !important; }
+  .profile-cards-wrap { display: block !important; }
 
   /* Product detail page */
   .pdp-breadcrumb { padding: 0.75rem 1rem; }
