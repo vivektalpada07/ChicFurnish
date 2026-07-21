@@ -58,6 +58,17 @@ export default function Register() {
     if (!email) { setError('Please enter your email address.'); return; }
     if (!isValidEmailFormat(email)) { setError('That doesn\'t look like a valid email address.'); return; }
     if (isDisposable(email)) { setError('Please use a real email address — disposable emails are not accepted.'); return; }
+    if (form.phone.trim()) {
+      const digits = form.phone.replace(/\D/g, '');
+      const repeating = /^(\d)\1{6,}$/.test(digits);
+      const sequential = ['01234567','12345678','23456789','98765432','87654321'].some((s) => digits.includes(s));
+      if (digits.length < 7 || digits.length > 15) {
+        setError('Phone number must be between 7 and 15 digits.'); return;
+      }
+      if (repeating || sequential) {
+        setError('Please enter a real phone number.'); return;
+      }
+    }
     if (!form.password) { setError('Please set a password.'); return; }
     if (form.password.length < 6) { setError('Password must be at least 6 characters.'); return; }
     if (form.password !== form.confirm) { setError('Passwords do not match.'); return; }
@@ -157,34 +168,38 @@ export default function Register() {
           />
         </div>
 
-        <div className="grid-2">
-          <div className="form-group">
-            <label className="form-label">Password *</label>
-            <input
-              className="form-input" type="password" placeholder="Min. 6 characters"
-              value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
-            />
-            {(() => {
-              const s = getPasswordStrength(form.password);
-              if (!s) return null;
-              return (
-                <div style={{ marginTop: '0.5rem' }}>
-                  <div style={{ height: 4, background: '#e8e2da', borderRadius: 2, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: s.width, background: s.color, borderRadius: 2, transition: 'width 0.3s, background 0.3s' }} />
-                  </div>
-                  <p style={{ fontSize: '0.72rem', color: s.color, fontWeight: 700, marginTop: '0.3rem', letterSpacing: '0.08em' }}>{s.label}</p>
+        <div className="form-group">
+          <label className="form-label">Password *</label>
+          <input
+            className="form-input" type="password" placeholder="Min. 6 characters"
+            value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
+          />
+          {(() => {
+            const s = getPasswordStrength(form.password);
+            if (!s) return null;
+            return (
+              <div style={{ marginTop: '0.5rem' }}>
+                <div style={{ height: 5, background: '#e8e2da', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: s.width, background: s.color, borderRadius: 3, transition: 'width 0.3s, background 0.3s' }} />
                 </div>
-              );
-            })()}
-          </div>
-          <div className="form-group">
-            <label className="form-label">Confirm Password *</label>
-            <input
-              className="form-input" type="password" placeholder="Repeat password"
-              value={form.confirm} onChange={(e) => setForm({ ...form, confirm: e.target.value })}
-              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-            />
-          </div>
+                <p style={{ fontSize: '0.72rem', color: s.color, fontWeight: 700, marginTop: '0.3rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{s.label}</p>
+              </div>
+            );
+          })()}
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Confirm Password *</label>
+          <input
+            className="form-input" type="password" placeholder="Repeat password"
+            value={form.confirm} onChange={(e) => setForm({ ...form, confirm: e.target.value })}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+          />
+          {form.confirm && (
+            <p style={{ fontSize: '0.72rem', marginTop: '0.3rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: form.confirm === form.password ? '#1a7a3c' : '#c04a1a' }}>
+              {form.confirm === form.password ? '✓ Passwords match' : '✗ Does not match'}
+            </p>
+          )}
         </div>
 
         <button
