@@ -63,7 +63,6 @@ export default function CustomerShop() {
       return new Date(b.created_at) - new Date(a.created_at);
     });
 
-  const addToCart = (item) => { if (!cart.find((c) => c.id === item.id)) setCart([...cart, item]); };
   const removeFromCart = (id) => setCart(cart.filter((c) => c.id !== id));
   const cartTotal = cart.reduce((sum, c) => sum + Number(c.price), 0);
   const openCart = () => { setCartStep('cart'); setCartOpen(true); };
