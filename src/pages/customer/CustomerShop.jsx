@@ -63,7 +63,6 @@ export default function CustomerShop() {
       return new Date(b.created_at) - new Date(a.created_at);
     });
 
-  const addToCart = (item) => { if (!cart.find((c) => c.id === item.id)) setCart([...cart, item]); };
   const removeFromCart = (id) => setCart(cart.filter((c) => c.id !== id));
   const cartTotal = cart.reduce((sum, c) => sum + Number(c.price), 0);
   const openCart = () => { setCartStep('cart'); setCartOpen(true); };
@@ -196,56 +195,26 @@ export default function CustomerShop() {
             <p style={{ fontSize: '1rem', color: '#4a5e72', fontWeight: 500 }}>{search ? 'Try a different search term or browse all categories.' : 'Check back soon — new pieces are added regularly.'}</p>
           </div>
         ) : filtered.map((item) => (
-          <div key={item.id}
-            style={{ background: 'white', border: '2px solid #b8c8d8', overflow: 'hidden', transition: 'transform 0.25s, box-shadow 0.25s' }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(26,58,92,0.18)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-          >
-            {/* Product image — click to open detail page */}
-            <div style={{ height: 230, position: 'relative', overflow: 'hidden', cursor: 'pointer' }} onClick={() => navigate(`/shop/${item.id}`)}>
+          <div key={item.id} className="product-card" onClick={() => navigate(`/shop/${item.id}`)}>
+            {/* Image */}
+            <div className="product-card-img">
               {item.photo_url
-                ? <img src={item.photo_url} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                : (
-                  <div style={{ width: '100%', height: '100%', background: '#d6e8f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: 'rgba(26,58,92,0.35)', letterSpacing: '0.2em', fontWeight: 600 }}>{item.category.toUpperCase()}</span>
+                ? <img src={item.photo_url} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.4s ease' }} />
+                : <div style={{ width: '100%', height: '100%', background: '#dde8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontFamily: 'var(--font-display)', color: 'rgba(26,58,92,0.3)', letterSpacing: '0.3em' }}>{item.category?.toUpperCase()}</span>
                   </div>
-                )
               }
-              <span style={{ position: 'absolute', top: '0.75rem', left: '0.75rem', background: item.condition === 'New' ? '#1a3a5c' : '#c04a1a', color: 'white', fontSize: '0.72rem', letterSpacing: '0.15em', textTransform: 'uppercase', padding: '0.35rem 0.8rem', fontWeight: 700 }}>{item.condition}</span>
+              <span className={`product-card-badge ${item.condition === 'New' ? 'badge-new' : 'badge-used'}`}>{item.condition}</span>
               {(item.photos || []).length > 0 && (
-                <span style={{ position: 'absolute', bottom: '0.75rem', right: '0.75rem', background: 'rgba(15,30,46,0.75)', color: 'white', fontSize: '0.68rem', letterSpacing: '0.08em', padding: '0.25rem 0.6rem', fontWeight: 700 }}>
-                  +{(item.photos || []).length} photos
-                </span>
+                <span className="product-card-count">+{(item.photos || []).length}</span>
               )}
             </div>
-
-            <div style={{ padding: '1.4rem 1.5rem 1.6rem' }}>
-              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 600, marginBottom: '0.4rem', color: '#0f1e2e', cursor: 'pointer' }} onClick={() => navigate(`/shop/${item.id}`)}>{item.name}</h3>
-              {item.description && (
-                <p style={{
-                  fontSize: '0.9rem', color: '#2a3d52', marginBottom: '1rem', lineHeight: 1.75, fontWeight: 400,
-                  display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                }}>
-                  {item.description}
-                </p>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1.2rem' }}>
-                <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 600, color: '#0f1e2e' }}>${Number(item.price).toLocaleString()}</span>
-                <span style={{ fontSize: '0.78rem', color: '#4a5e72', fontWeight: 700 }}>NZD</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <button
-                  style={{ width: '100%', padding: '0.78rem', background: '#1a3a5c', color: '#f0d8c8', border: 'none', fontFamily: 'var(--font-body)', fontSize: '0.78rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer' }}
-                  onClick={() => openViewing(item)}
-                >
-                  Book a Viewing
-                </button>
-                <button
-                  style={{ width: '100%', padding: '0.72rem', background: cart.find((c) => c.id === item.id) ? '#eef5fb' : 'white', color: cart.find((c) => c.id === item.id) ? '#1a3a5c' : '#c04a1a', border: '2px solid ' + (cart.find((c) => c.id === item.id) ? '#b8c8d8' : '#c04a1a'), fontFamily: 'var(--font-body)', fontSize: '0.78rem', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
-                  onClick={() => addToCart(item)}
-                >
-                  {cart.find((c) => c.id === item.id) ? '✓ In Cart' : 'Add to Cart'}
-                </button>
+            {/* Info */}
+            <div className="product-card-body">
+              <h3 className="product-card-name">{item.name}</h3>
+              <div className="product-card-footer">
+                <span className="product-card-price">${Number(item.price).toLocaleString()} <small>NZD</small></span>
+                <button className="product-card-cta" onClick={(e) => { e.stopPropagation(); openViewing(item); }}>Book Viewing</button>
               </div>
             </div>
           </div>

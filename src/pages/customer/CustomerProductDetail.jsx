@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import CustomerNav from '../../components/CustomerNav';
 import { useAuth } from '../../context/AuthContext';
@@ -15,6 +15,9 @@ export default function CustomerProductDetail() {
   const [loading, setLoading] = useState(true);
   const [activePhoto, setActivePhoto] = useState(null);
   const [lightbox, setLightbox] = useState(false);
+
+  const [slideIndex, setSlideIndex] = useState(0);
+  const sliderRef = useRef(null);
 
   const [viewingOpen, setViewingOpen] = useState(false);
   const [viewingForm, setViewingForm] = useState({ phone: '', date: '', time: '10:00 AM' });
@@ -98,25 +101,58 @@ export default function CustomerProductDetail() {
         {/* ── LEFT: IMAGE GALLERY ── */}
         <div className="pdp-gallery">
 
-          {/* Mobile: big image full width */}
-          <div className="pdp-main-img" onClick={() => { if (activePhoto) setLightbox(true); }} style={{ cursor: activePhoto ? 'zoom-in' : 'default', background: '#dde8f0', position: 'relative', overflow: 'hidden' }}>
-            {activePhoto
-              ? <img src={activePhoto} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontFamily: 'var(--font-display)', color: 'rgba(26,58,92,0.3)', fontSize: '1.2rem', letterSpacing: '0.3em' }}>{item.category?.toUpperCase()}</span>
+          {/* Swipe slider (mobile) / main image (desktop) */}
+          <div style={{ position: 'relative', background: '#dde8f0', overflow: 'hidden' }} className="pdp-main-img">
+            {allPhotos.length > 0 ? (
+              <>
+                {/* Scrollable slider strip */}
+                <div
+                  ref={sliderRef}
+                  onScroll={(e) => {
+                    const idx = Math.round(e.target.scrollLeft / e.target.offsetWidth);
+                    setSlideIndex(idx);
+                    setActivePhoto(allPhotos[idx]);
+                  }}
+                  style={{ display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch', height: '100%', scrollbarWidth: 'none' }}
+                >
+                  {allPhotos.map((photo, i) => (
+                    <div key={i} style={{ minWidth: '100%', height: '100%', scrollSnapAlign: 'start', flexShrink: 0, cursor: 'zoom-in' }} onClick={() => setLightbox(true)}>
+                      <img src={photo} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    </div>
+                  ))}
                 </div>
-            }
-            {activePhoto && (
-              <span style={{ position: 'absolute', bottom: '0.75rem', right: '0.75rem', background: 'rgba(0,0,0,0.45)', color: 'white', fontSize: '0.7rem', padding: '0.3rem 0.6rem', fontWeight: 600 }}>⤢ Tap to zoom</span>
+
+                {/* Dot indicators */}
+                {allPhotos.length > 1 && (
+                  <div style={{ position: 'absolute', bottom: '0.7rem', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '0.4rem' }}>
+                    {allPhotos.map((_, i) => (
+                      <button key={i} onClick={() => {
+                        sliderRef.current?.scrollTo({ left: i * sliderRef.current.offsetWidth, behavior: 'smooth' });
+                        setSlideIndex(i); setActivePhoto(allPhotos[i]);
+                      }} style={{ width: slideIndex === i ? 20 : 8, height: 8, borderRadius: 4, border: 'none', background: slideIndex === i ? 'white' : 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: 0, transition: 'all 0.2s' }} />
+                    ))}
+                  </div>
+                )}
+
+                {/* Zoom hint */}
+                <span style={{ position: 'absolute', top: '0.7rem', right: '0.7rem', background: 'rgba(0,0,0,0.4)', color: 'white', fontSize: '0.65rem', padding: '0.25rem 0.55rem', fontWeight: 600, pointerEvents: 'none' }}>⤢ Tap to zoom</span>
+              </>
+            ) : (
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontFamily: 'var(--font-display)', color: 'rgba(26,58,92,0.3)', fontSize: '1.2rem', letterSpacing: '0.3em' }}>{item.category?.toUpperCase()}</span>
+              </div>
             )}
-            <span style={{ position: 'absolute', top: '0.75rem', left: '0.75rem', background: item.condition === 'New' ? '#1a3a5c' : '#c04a1a', color: 'white', fontSize: '0.68rem', letterSpacing: '0.18em', textTransform: 'uppercase', padding: '0.3rem 0.8rem', fontWeight: 700 }}>{item.condition}</span>
+            <span style={{ position: 'absolute', top: '0.7rem', left: '0.7rem', background: item.condition === 'New' ? '#1a3a5c' : '#c04a1a', color: 'white', fontSize: '0.65rem', letterSpacing: '0.18em', textTransform: 'uppercase', padding: '0.28rem 0.75rem', fontWeight: 700 }}>{item.condition}</span>
           </div>
 
-          {/* Thumbnails */}
+          {/* Thumbnail row — desktop only */}
           {allPhotos.length > 1 && (
             <div className="pdp-thumbs">
               {allPhotos.map((photo, i) => (
-                <div key={i} onClick={() => setActivePhoto(photo)} className="pdp-thumb" style={{ outline: activePhoto === photo ? '2.5px solid #1a3a5c' : '2px solid #ccc', outlineOffset: activePhoto === photo ? 2 : 0 }}>
+                <div key={i} onClick={() => {
+                  setActivePhoto(photo); setSlideIndex(i);
+                  sliderRef.current?.scrollTo({ left: i * sliderRef.current.offsetWidth, behavior: 'smooth' });
+                }} className="pdp-thumb" style={{ outline: slideIndex === i ? '2.5px solid #1a3a5c' : '2px solid #ccc', outlineOffset: slideIndex === i ? 2 : 0 }}>
                   <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 </div>
               ))}
