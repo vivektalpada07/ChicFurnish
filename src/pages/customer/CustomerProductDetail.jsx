@@ -1,0 +1,241 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import CustomerNav from '../../components/CustomerNav';
+import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
+
+const TIMES = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'];
+
+export default function CustomerProductDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const [item, setItem] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activePhoto, setActivePhoto] = useState(null);
+  const [lightbox, setLightbox] = useState(false);
+
+  const [viewingOpen, setViewingOpen] = useState(false);
+  const [viewingForm, setViewingForm] = useState({ phone: '', date: '', time: '10:00 AM' });
+  const [viewingDone, setViewingDone] = useState(false);
+
+  useEffect(() => {
+    supabase.from('listings').select('*').eq('id', id).single()
+      .then(({ data }) => {
+        setItem(data);
+        setActivePhoto(data?.photo_url || null);
+        setLoading(false);
+      });
+  }, [id]);
+
+  const openViewing = () => {
+    if (!user) { navigate('/login'); return; }
+    setViewingForm({ phone: user.phone || '', date: '', time: '10:00 AM' });
+    setViewingDone(false);
+    setViewingOpen(true);
+  };
+
+  const submitViewing = async () => {
+    if (!viewingForm.date) return;
+    const bookingData = {
+      id: `VB-${Date.now()}`,
+      listing_id: item.id,
+      listing_name: item.name,
+      customer_name: user.name,
+      customer_email: user.email,
+      customer_phone: viewingForm.phone,
+      date: viewingForm.date,
+      time: viewingForm.time,
+      status: 'pending',
+    };
+    await supabase.from('viewing_bookings').insert(bookingData);
+    supabase.functions.invoke('notify-admin', { body: { type: 'viewing', data: bookingData } });
+    setViewingDone(true);
+    setTimeout(() => setViewingOpen(false), 2500);
+  };
+
+  if (loading) return (
+    <div style={{ minHeight: '100vh', background: '#f8f4ee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', color: '#1a3a5c', letterSpacing: '0.2em' }}>Loading…</p>
+    </div>
+  );
+
+  if (!item) return (
+    <div style={{ minHeight: '100vh', background: '#f8f4ee' }}>
+      <CustomerNav />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem' }}>
+        <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', color: '#0f1e2e' }}>Item not found</p>
+        <button onClick={() => navigate('/shop')} style={backBtnStyle}>← Back to Shop</button>
+      </div>
+    </div>
+  );
+
+  const allPhotos = [item.photo_url, ...(item.photos || [])].filter(Boolean);
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#f8f4ee' }}>
+      <CustomerNav />
+
+      {/* Lightbox */}
+      {lightbox && activePhoto && (
+        <div onClick={() => setLightbox(false)} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.93)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={() => setLightbox(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', fontSize: '1.3rem', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer' }}>✕</button>
+          <img src={activePhoto} alt="" style={{ maxWidth: '95vw', maxHeight: '92vh', objectFit: 'contain' }} onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
+
+      {/* Breadcrumb */}
+      <div className="pdp-breadcrumb">
+        <button onClick={() => navigate('/shop')} style={{ background: 'none', border: 'none', color: '#c04a1a', fontFamily: 'var(--font-body)', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', letterSpacing: '0.08em' }}>← Back to Shop</button>
+        <span style={{ color: '#b8c8d8', margin: '0 0.5rem' }}>/</span>
+        <span style={{ fontSize: '0.78rem', color: '#4a5e72', fontWeight: 500 }}>{item.name}</span>
+      </div>
+
+      {/* Main layout */}
+      <div className="pdp-layout">
+
+        {/* ── LEFT: IMAGE GALLERY ── */}
+        <div className="pdp-gallery">
+
+          {/* Mobile: big image full width */}
+          <div className="pdp-main-img" onClick={() => { if (activePhoto) setLightbox(true); }} style={{ cursor: activePhoto ? 'zoom-in' : 'default', background: '#dde8f0', position: 'relative', overflow: 'hidden' }}>
+            {activePhoto
+              ? <img src={activePhoto} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontFamily: 'var(--font-display)', color: 'rgba(26,58,92,0.3)', fontSize: '1.2rem', letterSpacing: '0.3em' }}>{item.category?.toUpperCase()}</span>
+                </div>
+            }
+            {activePhoto && (
+              <span style={{ position: 'absolute', bottom: '0.75rem', right: '0.75rem', background: 'rgba(0,0,0,0.45)', color: 'white', fontSize: '0.7rem', padding: '0.3rem 0.6rem', fontWeight: 600 }}>⤢ Tap to zoom</span>
+            )}
+            <span style={{ position: 'absolute', top: '0.75rem', left: '0.75rem', background: item.condition === 'New' ? '#1a3a5c' : '#c04a1a', color: 'white', fontSize: '0.68rem', letterSpacing: '0.18em', textTransform: 'uppercase', padding: '0.3rem 0.8rem', fontWeight: 700 }}>{item.condition}</span>
+          </div>
+
+          {/* Thumbnails */}
+          {allPhotos.length > 1 && (
+            <div className="pdp-thumbs">
+              {allPhotos.map((photo, i) => (
+                <div key={i} onClick={() => setActivePhoto(photo)} className="pdp-thumb" style={{ outline: activePhoto === photo ? '2.5px solid #1a3a5c' : '2px solid #ccc', outlineOffset: activePhoto === photo ? 2 : 0 }}>
+                  <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── RIGHT: PRODUCT INFO ── */}
+        <div className="pdp-info" style={{ padding: '1.25rem 1rem 1rem' }}>
+
+          {/* Category tag */}
+          <p style={{ fontSize: '0.7rem', letterSpacing: '0.28em', textTransform: 'uppercase', color: '#c04a1a', fontWeight: 700, marginBottom: '0.5rem' }}>
+            {item.category}
+          </p>
+
+          {/* Name */}
+          <h1 className="pdp-title">{item.name}</h1>
+
+          {/* Price */}
+          <div className="pdp-price-row">
+            <span className="pdp-price">${Number(item.price).toLocaleString()}</span>
+            <span style={{ fontSize: '0.88rem', color: '#4a5e72', fontWeight: 700 }}>NZD</span>
+          </div>
+
+          <div style={{ height: '1px', background: '#dde3e8', margin: '1.25rem 0' }} />
+
+          {/* Description */}
+          {item.description && (
+            <div style={{ marginBottom: '1.5rem' }}>
+              <p style={{ fontSize: '0.7rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#1a3a5c', fontWeight: 700, marginBottom: '0.6rem' }}>About this item</p>
+              <p style={{ fontSize: '0.95rem', color: '#2a3d52', lineHeight: 1.85, fontWeight: 400, whiteSpace: 'pre-wrap' }}>{item.description}</p>
+            </div>
+          )}
+
+          {/* Details table */}
+          <div style={{ background: '#eef5fb', border: '1px solid #d6e8f5', padding: '1rem 1.25rem', marginBottom: '1.75rem' }}>
+            <p style={{ fontSize: '0.68rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#1a3a5c', fontWeight: 700, marginBottom: '0.75rem' }}>Item Details</p>
+            {[
+              ['Condition', item.condition],
+              ['Category', item.category],
+              ['Location', 'Auckland, New Zealand'],
+              ['Availability', item.status === 'available' ? 'In Stock' : 'Sold'],
+            ].map(([k, v]) => (
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0', borderBottom: '1px solid #d6e8f5', fontSize: '0.88rem' }}>
+                <span style={{ color: '#4a5e72', fontWeight: 600 }}>{k}</span>
+                <span style={{ color: '#0f1e2e', fontWeight: 700 }}>{v}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA buttons */}
+          <div className="pdp-actions">
+            <button className="pdp-btn-primary" onClick={openViewing}>
+              Book a Viewing
+            </button>
+            <button className="pdp-btn-secondary" onClick={() => navigate('/shop')}>
+              Browse More
+            </button>
+          </div>
+
+          {/* Trust signals */}
+          <div className="pdp-trust">
+            {['✓  Free viewing — no obligation', '✓  Professional inspection done', '✓  Auckland pickup & delivery available'].map((t) => (
+              <p key={t} style={{ fontSize: '0.82rem', color: '#4a5e72', fontWeight: 500, padding: '0.3rem 0' }}>{t}</p>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── VIEWING BOOKING MODAL ── */}
+      {viewingOpen && (
+        <div className="modal-overlay" onClick={() => setViewingOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480 }}>
+            {viewingDone ? (
+              <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+                <div style={{ fontSize: '3rem', color: '#c04a1a', marginBottom: '1rem' }}>✓</div>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 600, color: '#0f1e2e', marginBottom: '0.75rem' }}>Viewing Requested!</h2>
+                <p style={{ color: '#2a3d52', fontSize: '0.95rem', lineHeight: 1.9 }}>We'll confirm your viewing for <strong>{item.name}</strong> within 24 hours.</p>
+              </div>
+            ) : (
+              <>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.7rem', fontWeight: 600, color: '#0f1e2e', marginBottom: '1.25rem' }}>Book a Viewing</h2>
+                <div style={{ background: '#eef5fb', border: '1px solid #d6e8f5', borderLeft: '4px solid #1a3a5c', padding: '0.9rem 1.1rem', marginBottom: '1.5rem' }}>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', fontWeight: 600, color: '#0f1e2e' }}>{item.name}</div>
+                  <div style={{ fontSize: '0.85rem', color: '#4a5e72', marginTop: '0.2rem' }}>${Number(item.price).toLocaleString()} NZD · {item.condition}</div>
+                </div>
+                <div className="grid-2">
+                  <div className="form-group"><label className="form-label">Name</label><input className="form-input" value={user?.name || ''} disabled style={{ opacity: 0.65 }} /></div>
+                  <div className="form-group"><label className="form-label">Email</label><input className="form-input" value={user?.email || ''} disabled style={{ opacity: 0.65 }} /></div>
+                </div>
+                <div className="grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Phone</label>
+                    <input className="form-input" value={viewingForm.phone} onChange={(e) => setViewingForm({ ...viewingForm, phone: e.target.value })} placeholder="021 XXX XXX" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Preferred Date *</label>
+                    <input className="form-input" type="date" value={viewingForm.date} onChange={(e) => setViewingForm({ ...viewingForm, date: e.target.value })} min={new Date().toISOString().split('T')[0]} />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Preferred Time</label>
+                  <select className="form-select" value={viewingForm.time} onChange={(e) => setViewingForm({ ...viewingForm, time: e.target.value })}>
+                    {TIMES.map((t) => <option key={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                  <button onClick={() => setViewingOpen(false)} style={{ background: 'none', border: '2px solid #b8c8d8', color: '#4a5e72', padding: '0.7rem 1.3rem', fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Cancel</button>
+                  <button onClick={submitViewing} disabled={!viewingForm.date} style={{ background: viewingForm.date ? '#1a3a5c' : '#b8c8d8', color: '#f0d8c8', border: 'none', padding: '0.7rem 1.5rem', fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 700, cursor: viewingForm.date ? 'pointer' : 'not-allowed', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                    Request Viewing →
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const backBtnStyle = { background: 'none', border: '2px solid #b8c8d8', color: '#1a3a5c', padding: '0.6rem 1.2rem', fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase' };

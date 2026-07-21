@@ -276,6 +276,138 @@ html { scroll-behavior: smooth; }
 }
 
 /* ── CUSTOMER MOBILE ───────────────────────────────────── */
+/* ── PRODUCT DETAIL PAGE (PDP) ─────────────────────────── */
+.pdp-breadcrumb {
+  padding: 0.9rem 2rem;
+  border-bottom: 1px solid #dde3e8;
+  display: flex;
+  align-items: center;
+  background: white;
+}
+
+.pdp-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 0 5rem;
+  align-items: start;
+}
+
+@media (min-width: 681px) {
+  .pdp-layout {
+    grid-template-columns: 55% 1fr;
+    gap: 3rem;
+    padding: 2.5rem 2rem 4rem;
+  }
+  .pdp-gallery { position: sticky; top: 1rem; }
+  .pdp-info { padding: 0 !important; }
+  .pdp-main-img { aspect-ratio: 4 / 3; }
+  .pdp-thumbs { padding: 0 !important; }
+  .pdp-actions {
+    position: static !important;
+    box-shadow: none !important;
+    border-top: none !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+  }
+  .pdp-btn-primary, .pdp-btn-secondary { padding: 1rem 1.5rem !important; font-size: 0.88rem !important; }
+  .pdp-trust { margin-top: 0 !important; }
+}
+
+.pdp-gallery {
+  /* mobile: no sticky */
+}
+
+.pdp-main-img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.pdp-thumbs {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.pdp-thumb {
+  width: 76px;
+  height: 62px;
+  cursor: pointer;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: outline 0.15s;
+}
+
+.pdp-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 600;
+  color: #0f1e2e;
+  line-height: 1.2;
+  margin-bottom: 0.75rem;
+}
+
+.pdp-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.pdp-price {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #0f1e2e;
+}
+
+.pdp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.pdp-btn-primary {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: #1a3a5c;
+  color: #f0d8c8;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.pdp-btn-primary:hover { background: #0f2540; }
+
+.pdp-btn-secondary {
+  width: 100%;
+  padding: 0.95rem 1.5rem;
+  background: white;
+  color: #c04a1a;
+  border: 2px solid #c04a1a;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.pdp-btn-secondary:hover { background: #fdf0eb; }
+
+.pdp-trust {
+  border-top: 1px solid #dde3e8;
+  padding-top: 1rem;
+}
+
+/* ── MOBILE ──────────────────────────────────────────────── */
 @media (max-width: 680px) {
   /* Shop page header */
   .shop-header {
@@ -332,4 +464,33 @@ html { scroll-behavior: smooth; }
 
   /* General page padding */
   .customer-page-padding { padding: 1.5rem 1rem !important; }
+
+  /* Product detail page */
+  .pdp-breadcrumb { padding: 0.75rem 1rem; }
+  .pdp-layout {
+    grid-template-columns: 1fr !important;
+    padding: 0 0 5rem !important;
+    gap: 0 !important;
+  }
+  .pdp-gallery { position: static; }
+  .pdp-main-img { aspect-ratio: 1 / 1; border-radius: 0; }
+  .pdp-thumbs { padding: 0.6rem 1rem; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .pdp-thumb { width: 64px; height: 52px; }
+  .pdp-info { padding: 1.25rem 1rem 1rem !important; }
+  .pdp-title { font-size: 1.5rem !important; }
+  .pdp-price { font-size: 1.7rem !important; }
+  /* Sticky bottom bar on mobile */
+  .pdp-actions {
+    position: fixed !important;
+    bottom: 0; left: 0; right: 0;
+    padding: 0.75rem 1rem !important;
+    background: white;
+    border-top: 1px solid #dde3e8;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    flex-direction: row !important;
+    gap: 0.6rem !important;
+    z-index: 100;
+    margin-bottom: 0 !important;
+  }
+  .pdp-btn-primary, .pdp-btn-secondary { padding: 0.85rem 0.75rem !important; font-size: 0.78rem !important; }
 }
