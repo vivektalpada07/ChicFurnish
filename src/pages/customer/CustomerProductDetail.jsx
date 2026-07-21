@@ -13,7 +13,6 @@ export default function CustomerProductDetail() {
 
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activePhoto, setActivePhoto] = useState(null);
   const [lightbox, setLightbox] = useState(false);
 
   const [slideIndex, setSlideIndex] = useState(0);
@@ -27,7 +26,6 @@ export default function CustomerProductDetail() {
     supabase.from('listings').select('*').eq('id', id).single()
       .then(({ data }) => {
         setItem(data);
-        setActivePhoto(data?.photo_url || null);
         setLoading(false);
       });
   }, [id]);
@@ -96,7 +94,7 @@ export default function CustomerProductDetail() {
               ref={(el) => { if (el) el.scrollLeft = slideIndex * el.offsetWidth; }}
               onScroll={(e) => {
                 const idx = Math.round(e.target.scrollLeft / e.target.offsetWidth);
-                if (idx !== slideIndex) { setSlideIndex(idx); setActivePhoto(allPhotos[idx]); }
+                if (idx !== slideIndex) { setSlideIndex(idx); }
               }}
             >
               {allPhotos.map((photo, i) => (
@@ -108,11 +106,11 @@ export default function CustomerProductDetail() {
 
             {/* Prev / Next arrows */}
             {slideIndex > 0 && (
-              <button onClick={() => { const i = slideIndex - 1; setSlideIndex(i); setActivePhoto(allPhotos[i]); sliderRef.current?.scrollTo({ left: i * sliderRef.current.offsetWidth, behavior: 'smooth' }); }}
+              <button onClick={() => { const i = slideIndex - 1; setSlideIndex(i); sliderRef.current?.scrollTo({ left: i * sliderRef.current.offsetWidth, behavior: 'smooth' }); }}
                 style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
             )}
             {slideIndex < allPhotos.length - 1 && (
-              <button onClick={() => { const i = slideIndex + 1; setSlideIndex(i); setActivePhoto(allPhotos[i]); sliderRef.current?.scrollTo({ left: i * sliderRef.current.offsetWidth, behavior: 'smooth' }); }}
+              <button onClick={() => { const i = slideIndex + 1; setSlideIndex(i); sliderRef.current?.scrollTo({ left: i * sliderRef.current.offsetWidth, behavior: 'smooth' }); }}
                 style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
             )}
           </div>
@@ -121,7 +119,7 @@ export default function CustomerProductDetail() {
           {allPhotos.length > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', gap: '0.4rem', padding: '0.75rem', flexShrink: 0 }}>
               {allPhotos.map((_, i) => (
-                <div key={i} style={{ width: slideIndex === i ? 20 : 8, height: 8, borderRadius: 4, background: slideIndex === i ? 'white' : 'rgba(255,255,255,0.35)', transition: 'all 0.2s', cursor: 'pointer' }} onClick={() => { setSlideIndex(i); setActivePhoto(allPhotos[i]); }} />
+                <div key={i} style={{ width: slideIndex === i ? 20 : 8, height: 8, borderRadius: 4, background: slideIndex === i ? 'white' : 'rgba(255,255,255,0.35)', transition: 'all 0.2s', cursor: 'pointer' }} onClick={() => { setSlideIndex(i); }} />
               ))}
             </div>
           )}
@@ -190,7 +188,7 @@ export default function CustomerProductDetail() {
             <div className="pdp-thumbs">
               {allPhotos.map((photo, i) => (
                 <div key={i} onClick={() => {
-                  setActivePhoto(photo); setSlideIndex(i);
+                  setSlideIndex(i);
                   sliderRef.current?.scrollTo({ left: i * sliderRef.current.offsetWidth, behavior: 'smooth' });
                 }} className="pdp-thumb" style={{ outline: slideIndex === i ? '2.5px solid #1a3a5c' : '2px solid #ccc', outlineOffset: slideIndex === i ? 2 : 0 }}>
                   <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />

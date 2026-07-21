@@ -23,6 +23,20 @@ function isDisposable(email) {
   return DISPOSABLE_DOMAINS.includes(domain);
 }
 
+function getPasswordStrength(pw) {
+  if (!pw) return null;
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  if (score <= 1) return { label: 'Weak', color: '#c04a1a', bg: '#fde8e8', width: '25%' };
+  if (score === 2) return { label: 'Fair', color: '#c08a00', bg: '#fff8e0', width: '50%' };
+  if (score === 3) return { label: 'Good', color: '#1a7a3c', bg: '#d4edda', width: '75%' };
+  return { label: 'Strong', color: '#1a5c8a', bg: '#d6e8f5', width: '100%' };
+}
+
 export default function Register() {
   const navigate = useNavigate();
   const [done, setDone] = useState(false);
@@ -150,6 +164,18 @@ export default function Register() {
               className="form-input" type="password" placeholder="Min. 6 characters"
               value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
+            {(() => {
+              const s = getPasswordStrength(form.password);
+              if (!s) return null;
+              return (
+                <div style={{ marginTop: '0.5rem' }}>
+                  <div style={{ height: 4, background: '#e8e2da', borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: s.width, background: s.color, borderRadius: 2, transition: 'width 0.3s, background 0.3s' }} />
+                  </div>
+                  <p style={{ fontSize: '0.72rem', color: s.color, fontWeight: 700, marginTop: '0.3rem', letterSpacing: '0.08em' }}>{s.label}</p>
+                </div>
+              );
+            })()}
           </div>
           <div className="form-group">
             <label className="form-label">Confirm Password *</label>
