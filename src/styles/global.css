@@ -26,6 +26,20 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Smooth focus ring */
+:focus-visible {
+  outline: 2.5px solid #2e5f8a;
+  outline-offset: 2px;
+}
+
+/* Smooth link/button cursor */
+button, a { cursor: pointer; }
+
 body {
   font-family: var(--font-body);
   background: var(--cream);
@@ -323,6 +337,10 @@ html { scroll-behavior: smooth; }
 
 .product-card-body {
   padding: 0.9rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 110px;
 }
 
 .product-card-name {

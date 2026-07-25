@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import CustomerNav from '../../components/CustomerNav';
 import { supabase } from '../../lib/supabase';
+import { toast } from '../../components/Toast';
 
 export default function CustomerContact() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
@@ -26,6 +27,7 @@ export default function CustomerContact() {
 
     if (err) { setError('Something went wrong. Please try again.'); return; }
     supabase.functions.invoke('notify-admin', { body: { type: 'enquiry', data: form } });
+    toast('Message sent! We\'ll respond within 1 business day.');
     setDone(true);
   };
 
