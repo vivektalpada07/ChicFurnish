@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CustomerNav from '../../components/CustomerNav';
 import { useAuth } from '../../context/AuthContext';
-import { useCart } from '../../context/CartContext';
 import { supabase } from '../../lib/supabase';
 import { toast } from '../../components/Toast';
 
@@ -19,7 +18,6 @@ const TIMES = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 P
 export default function CustomerShop() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { addToCart, cart, openCart } = useCart();
 
   const [listings, setListings] = useState([]);
   const [loadingListings, setLoadingListings] = useState(true);
@@ -172,16 +170,7 @@ export default function CustomerShop() {
               <h3 className="product-card-name">{item.name}</h3>
               <div className="product-card-footer">
                 <span className="product-card-price">${Number(item.price).toLocaleString()} <small>NZD</small></span>
-                <div style={{ display: 'flex', gap: '0.4rem' }}>
-                  <button
-                    className="product-card-cta"
-                    style={{ background: cart.find((c) => c.id === item.id) ? '#2e6b42' : undefined }}
-                    onClick={(e) => { e.stopPropagation(); addToCart(item); openCart(); }}
-                  >
-                    {cart.find((c) => c.id === item.id) ? '✓ Cart' : '+ Cart'}
-                  </button>
-                  <button className="product-card-cta" style={{ background: '#1a3a5c' }} onClick={(e) => { e.stopPropagation(); openViewing(item); }}>View</button>
-                </div>
+                <button className="product-card-cta" style={{ background: '#1a3a5c' }} onClick={(e) => { e.stopPropagation(); openViewing(item); }}>View</button>
               </div>
             </div>
           </div>

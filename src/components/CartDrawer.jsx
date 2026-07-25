@@ -89,7 +89,7 @@ export default function CartDrawer() {
   return (
     <div className="modal-overlay" onClick={closeCart}>
       <div
-        style={{ background: '#f8f4ee', border: '2px solid #b8c8d8', padding: '2.5rem', width: '100%', maxWidth: 540, marginLeft: 'auto', height: '100vh', maxHeight: '100vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}
+        style={{ background: '#f8f4ee', border: '2px solid #b8c8d8', padding: 'clamp(1.25rem, 5vw, 2.5rem)', width: '100%', maxWidth: 540, marginLeft: 'auto', height: '100vh', maxHeight: '100vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}
         onClick={(e) => e.stopPropagation()}
       >
 
