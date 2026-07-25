@@ -61,6 +61,9 @@ export default function CustomerNav({ cartCount: cartCountProp, onCartClick: onC
           {user ? (
             <>
               <button onClick={() => navigate('/profile')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.88rem', fontWeight: 600, color: '#0f1e2e' }}>Hi, {user.name.split(' ')[0]}</button>
+              {user.role === 'admin' && (
+                <button onClick={() => navigate('/admin')} style={{ background: 'none', border: '1.5px solid #1a3a5c', color: '#1a3a5c', padding: '0.45rem 0.9rem', fontFamily: 'var(--font-body)', fontSize: '0.72rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer' }}>Admin ↗</button>
+              )}
               <button onClick={handleLogout} style={{ background: '#1a3a5c', border: 'none', color: '#f0d8c8', padding: '0.55rem 1.2rem', fontFamily: 'var(--font-body)', fontSize: '0.78rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer' }}>Sign Out</button>
             </>
           ) : (
@@ -99,6 +102,9 @@ export default function CustomerNav({ cartCount: cartCountProp, onCartClick: onC
               {user ? (
                 <>
                   <button onClick={() => { navigate('/profile'); setMenuOpen(false); }} style={{ background: 'none', border: '1.5px solid #b8c8d8', color: '#0f1e2e', padding: '0.85rem', fontFamily: 'var(--font-body)', fontSize: '0.82rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer', width: '100%' }}>My Account</button>
+                  {user.role === 'admin' && (
+                    <button onClick={() => { navigate('/admin'); setMenuOpen(false); }} style={{ background: 'none', border: '1.5px solid #1a3a5c', color: '#1a3a5c', padding: '0.85rem', fontFamily: 'var(--font-body)', fontSize: '0.82rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', width: '100%' }}>Admin Panel ↗</button>
+                  )}
                   <button onClick={handleLogout} style={{ background: '#1a3a5c', border: 'none', color: '#f0d8c8', padding: '0.85rem', fontFamily: 'var(--font-body)', fontSize: '0.82rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer', width: '100%' }}>Sign Out</button>
                 </>
               ) : (
