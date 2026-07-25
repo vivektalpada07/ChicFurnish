@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
-export default function CustomerNav({ cartCount = 0, onCartClick }) {
+export default function CustomerNav({ cartCount: cartCountProp, onCartClick: onCartClickProp }) {
+  const { cart, openCart } = useCart();
+  const cartCount = cartCountProp ?? cart.length;
+  const onCartClick = onCartClickProp ?? openCart;
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();

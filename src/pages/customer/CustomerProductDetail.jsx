@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import CustomerNav from '../../components/CustomerNav';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import { supabase } from '../../lib/supabase';
+import { toast } from '../../components/Toast';
 
 const TIMES = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'];
 
@@ -10,10 +12,16 @@ export default function CustomerProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { cart, addToCart, openCart } = useCart();
 
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lightbox, setLightbox] = useState(false);
+
+  const [enquiryOpen, setEnquiryOpen] = useState(false);
+  const [enquiryMsg, setEnquiryMsg] = useState('');
+  const [enquirySending, setEnquirySending] = useState(false);
+  const [enquiryDone, setEnquiryDone] = useState(false);
 
   const [slideIndex, setSlideIndex] = useState(0);
   const sliderRef = useRef(null);
@@ -29,6 +37,34 @@ export default function CustomerProductDetail() {
         setLoading(false);
       });
   }, [id]);
+
+  const openEnquiry = () => {
+    if (!user) { navigate('/login'); return; }
+    setEnquiryMsg('');
+    setEnquiryDone(false);
+    setEnquiryOpen(true);
+  };
+
+  const submitEnquiry = async () => {
+    if (!enquiryMsg.trim()) return;
+    setEnquirySending(true);
+    const record = {
+      id: `ENQ-${Date.now()}`,
+      listing_id: item.id,
+      listing_name: item.name,
+      listing_price: item.price,
+      customer_name: user.name,
+      customer_email: user.email,
+      message: enquiryMsg.trim(),
+      status: 'open',
+    };
+    await supabase.from('item_enquiries').insert(record);
+    supabase.functions.invoke('notify-admin', { body: { type: 'enquiry', data: record } });
+    setEnquiryDone(true);
+    setEnquirySending(false);
+    toast('Question sent! We\'ll reply within 24 hours.');
+    setTimeout(() => setEnquiryOpen(false), 2500);
+  };
 
   const openViewing = () => {
     if (!user) { navigate('/login'); return; }
@@ -53,6 +89,7 @@ export default function CustomerProductDetail() {
     await supabase.from('viewing_bookings').insert(bookingData);
     supabase.functions.invoke('notify-admin', { body: { type: 'viewing', data: bookingData } });
     setViewingDone(true);
+    toast('Viewing requested! We\'ll confirm within 24 hours.');
     setTimeout(() => setViewingOpen(false), 2500);
   };
 
@@ -242,11 +279,20 @@ export default function CustomerProductDetail() {
 
           {/* CTA buttons */}
           <div className="pdp-actions">
-            <button className="pdp-btn-primary" onClick={openViewing}>
+            <button
+              className="pdp-btn-primary"
+              style={{ background: cart.find((c) => c.id === item.id) ? '#2e6b42' : undefined }}
+              onClick={() => { addToCart(item); openCart(); }}
+            >
+              {cart.find((c) => c.id === item.id) ? '✓ Added to Cart' : '+ Add to Cart'}
+            </button>
+            <button className="pdp-btn-secondary" onClick={openViewing}>
               Book a Viewing
             </button>
-            <button className="pdp-btn-secondary" onClick={() => navigate('/shop')}>
-              Browse More
+          </div>
+          <div style={{ marginTop: '0.75rem' }}>
+            <button onClick={openEnquiry} style={{ background: 'none', border: '1.5px solid #b8c8d8', color: '#1a3a5c', padding: '0.65rem 1.2rem', fontFamily: 'var(--font-body)', fontSize: '0.78rem', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer', width: '100%' }}>
+              ✉ Ask a Question
             </button>
           </div>
 
@@ -258,6 +304,39 @@ export default function CustomerProductDetail() {
           </div>
         </div>
       </div>
+
+      {/* ── ENQUIRY MODAL ── */}
+      {enquiryOpen && (
+        <div className="modal-overlay" onClick={() => setEnquiryOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480 }}>
+            {enquiryDone ? (
+              <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+                <div style={{ fontSize: '3rem', color: '#c04a1a', marginBottom: '1rem' }}>✉</div>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 600, color: '#0f1e2e', marginBottom: '0.75rem' }}>Question Sent!</h2>
+                <p style={{ color: '#2a3d52', fontSize: '0.95rem', lineHeight: 1.9 }}>We'll reply within 24 hours to <strong>{user?.email}</strong>.</p>
+              </div>
+            ) : (
+              <>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.7rem', fontWeight: 600, color: '#0f1e2e', marginBottom: '1.25rem' }}>Ask a Question</h2>
+                <div style={{ background: '#eef5fb', border: '1px solid #d6e8f5', borderLeft: '4px solid #1a3a5c', padding: '0.9rem 1.1rem', marginBottom: '1.5rem' }}>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', fontWeight: 600, color: '#0f1e2e' }}>{item.name}</div>
+                  <div style={{ fontSize: '0.85rem', color: '#4a5e72', marginTop: '0.2rem' }}>${Number(item.price).toLocaleString()} NZD · {item.condition}</div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Your Question *</label>
+                  <textarea className="form-textarea" style={{ minHeight: 120 }} value={enquiryMsg} onChange={(e) => setEnquiryMsg(e.target.value)} placeholder="Ask about dimensions, condition, delivery, availability…" />
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                  <button onClick={() => setEnquiryOpen(false)} style={{ background: 'none', border: '2px solid #b8c8d8', color: '#4a5e72', padding: '0.7rem 1.3rem', fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Cancel</button>
+                  <button onClick={submitEnquiry} disabled={enquirySending || !enquiryMsg.trim()} style={{ background: enquiryMsg.trim() ? '#1a3a5c' : '#b8c8d8', color: '#f0d8c8', border: 'none', padding: '0.7rem 1.5rem', fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 700, cursor: enquiryMsg.trim() ? 'pointer' : 'not-allowed', letterSpacing: '0.15em', textTransform: 'uppercase', opacity: enquirySending ? 0.7 : 1 }}>
+                    {enquirySending ? 'Sending…' : 'Send Question →'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── VIEWING BOOKING MODAL ── */}
       {viewingOpen && (
