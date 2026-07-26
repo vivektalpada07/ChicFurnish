@@ -121,23 +121,61 @@ serve(async (req) => {
     }
 
     else if (type === 'enquiry') {
-      await sendEmail(ADMIN_EMAIL, `New Enquiry — ${data.subject || 'General'}`, emailWrapper(`
-        <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#c04a1a;font-weight:700;">New Enquiry</p>
-        <h1 style="margin:0 0 24px;font-size:26px;color:#0f1e2e;font-weight:300;">${data.subject || 'General Enquiry'}</h1>
+      // Item enquiry from product page — notify admin
+      await sendEmail(ADMIN_EMAIL, `New Item Enquiry — ${data.listing_name || data.subject || 'General'}`, emailWrapper(`
+        <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#c04a1a;font-weight:700;">New Item Enquiry</p>
+        <h1 style="margin:0 0 24px;font-size:26px;color:#0f1e2e;font-weight:300;">Customer Question</h1>
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
           ${[
-            ['From', data.name],
-            ['Email', data.email],
-            ['Phone', data.phone || '—'],
+            ['From', data.customer_name || data.name],
+            ['Email', data.customer_email || data.email],
+            ['About', data.listing_name || '—'],
+            ['Price', data.listing_price ? `$${Number(data.listing_price).toLocaleString()} NZD` : '—'],
           ].map(([k,v]) => `
             <tr>
               <td style="padding:8px 0;border-bottom:1px solid #eef5fb;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#4a5e72;font-weight:700;width:40%;">${k}</td>
               <td style="padding:8px 0;border-bottom:1px solid #eef5fb;font-size:14px;color:#0f1e2e;font-weight:500;">${v}</td>
             </tr>`).join('')}
         </table>
-        <div style="background:#f8f4ee;border-left:4px solid #1a3a5c;padding:16px 20px;">
+        <div style="background:#f8f4ee;border-left:4px solid #1a3a5c;padding:16px 20px;margin-bottom:28px;">
+          <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Message</p>
           <p style="margin:0;font-size:14px;color:#0f1e2e;line-height:1.7;">${data.message}</p>
         </div>
+        <a href="https://chic-style-website.vercel.app/admin/enquiries" style="background:#1a3a5c;color:#f0d8c8;padding:12px 28px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
+          Reply in Dashboard →
+        </a>
+      `))
+    }
+
+    else if (type === 'enquiry-reply') {
+      // Admin replied — email the customer
+      await sendEmail(data.customer_email, `Re: Your question about ${data.listing_name}`, emailWrapper(`
+        <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#c04a1a;font-weight:700;">Reply from Chic Furnish</p>
+        <h1 style="margin:0 0 8px;font-size:26px;color:#0f1e2e;font-weight:300;">We've answered your question</h1>
+        <p style="margin:0 0 24px;font-size:15px;color:#4a5e72;line-height:1.7;">Hi ${data.customer_name}, here's our reply to your enquiry about <strong>${data.listing_name}</strong>.</p>
+
+        <div style="background:#f8f4ee;border:1.5px solid #d6e8f5;border-left:4px solid #1a3a5c;padding:20px 24px;margin-bottom:20px;">
+          <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Your question</p>
+          <p style="margin:0;font-size:14px;color:#4a5e72;line-height:1.7;font-style:italic;">"${data.message}"</p>
+        </div>
+
+        <div style="background:#eef5fb;border:1.5px solid #b8d8f0;border-left:4px solid #c04a1a;padding:20px 24px;margin-bottom:28px;">
+          <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#c04a1a;font-weight:700;">Our reply</p>
+          <p style="margin:0;font-size:15px;color:#0f1e2e;line-height:1.8;">${data.reply}</p>
+        </div>
+
+        ${data.listing_price ? `
+        <div style="background:#f8f4ee;border:1.5px solid #d6e8f5;padding:16px 20px;margin-bottom:28px;">
+          <p style="margin:0 0 4px;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#4a5e72;font-weight:700;">${data.listing_name}</p>
+          <p style="margin:0;font-size:18px;color:#c04a1a;font-weight:700;">$${Number(data.listing_price).toLocaleString()} NZD</p>
+        </div>` : ''}
+
+        <p style="margin:0 0 24px;font-size:13px;color:#4a5e72;line-height:1.7;">
+          Have more questions? Simply reply to this email and we'll get back to you.
+        </p>
+        <a href="https://chic-style-website.vercel.app/shop" style="background:#1a3a5c;color:#f0d8c8;padding:12px 28px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
+          View Item in Shop →
+        </a>
       `))
     }
 
