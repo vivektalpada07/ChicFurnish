@@ -16,6 +16,7 @@ import AdminBookings from './pages/admin/AdminBookings';
 import AdminQuotes from './pages/admin/AdminQuotes';
 import AdminInspiration from './pages/admin/AdminInspiration';
 import AdminEnquiries from './pages/admin/AdminEnquiries';
+import AdminOrders from './pages/admin/AdminOrders';
 import CustomerInspiration from './pages/customer/CustomerInspiration';
 import CustomerShop from './pages/customer/CustomerShop';
 import CustomerProfile from './pages/customer/CustomerProfile';
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/admin/quotes" element={<AdminRoute><AdminQuotes /></AdminRoute>} />
             <Route path="/admin/inspiration" element={<AdminRoute><AdminInspiration /></AdminRoute>} />
             <Route path="/admin/enquiries" element={<AdminRoute><AdminEnquiries /></AdminRoute>} />
+            <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
 
             {/* Customer - fully public, no login required to browse */}
             <Route path="/shop" element={<CustomerShop />} />
