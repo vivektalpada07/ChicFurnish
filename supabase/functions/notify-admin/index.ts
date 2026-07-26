@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const FROM = 'Chic Furnish <noreply@chicfurnish.resend.dev>'
+const FROM = 'Chic Furnish <noreply@chicfurnish.co.nz>'
 const ADMIN_EMAIL = 'vivektalpada769@gmail.com'
 
 async function sendEmail(to: string, subject: string, html: string, replyTo?: string) {
