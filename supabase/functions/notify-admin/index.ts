@@ -127,49 +127,90 @@ serve(async (req) => {
       const customerName = data.customer_name || data.name
       const itemName = data.listing_name || 'item'
 
-      // 1. Notify admin — reply-to customer so admin can reply directly from inbox
-      await sendEmail(ADMIN_EMAIL, `New Enquiry: ${itemName} — from ${customerName}`, emailWrapper(`
-        <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#c04a1a;font-weight:700;">New Item Enquiry</p>
-        <h1 style="margin:0 0 8px;font-size:26px;color:#0f1e2e;font-weight:300;">Customer Question</h1>
-        <p style="margin:0 0 24px;font-size:14px;color:#4a5e72;line-height:1.7;">
-          Hit <strong>Reply</strong> in your email app to respond directly to ${customerName}.
-        </p>
-        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-          ${[
-            ['From', customerName],
-            ['Email', customerEmail],
-            ['About', itemName],
-            ['Price', data.listing_price ? `$${Number(data.listing_price).toLocaleString()} NZD` : '—'],
-          ].map(([k,v]) => `
-            <tr>
-              <td style="padding:8px 0;border-bottom:1px solid #eef5fb;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#4a5e72;font-weight:700;width:40%;">${k}</td>
-              <td style="padding:8px 0;border-bottom:1px solid #eef5fb;font-size:14px;color:#0f1e2e;font-weight:500;">${v}</td>
-            </tr>`).join('')}
-        </table>
-        <div style="background:#f8f4ee;border-left:4px solid #1a3a5c;padding:16px 20px;">
-          <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Message</p>
-          <p style="margin:0;font-size:14px;color:#0f1e2e;line-height:1.7;">${data.message}</p>
+      const mailtoReply = `mailto:${customerEmail}?subject=Re%3A%20Your%20question%20about%20${encodeURIComponent(itemName)}`
+      const priceTag = data.listing_price ? `$${Number(data.listing_price).toLocaleString()} NZD` : null
+
+      // 1. Notify admin — attractive email with Reply button, reply-to set to customer
+      await sendEmail(ADMIN_EMAIL, `💬 New Enquiry: ${itemName} — ${customerName}`, emailWrapper(`
+        <!-- Alert banner -->
+        <div style="background:#c04a1a;margin:-40px -48px 32px;padding:16px 48px;display:flex;align-items:center;gap:12px;">
+          <span style="font-size:22px;">💬</span>
+          <div>
+            <p style="margin:0;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:rgba(255,255,255,0.7);font-weight:700;">New Item Enquiry</p>
+            <p style="margin:2px 0 0;font-size:15px;color:#fff;font-weight:600;">${customerName} asked about ${itemName}</p>
+          </div>
         </div>
+
+        <!-- Customer card -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;background:#f8f4ee;border:1.5px solid #d6e8f5;">
+          <tr>
+            <td style="padding:20px 24px;">
+              <p style="margin:0 0 2px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#4a5e72;font-weight:700;">From</p>
+              <p style="margin:0;font-size:18px;color:#0f1e2e;font-weight:600;">${customerName}</p>
+              <p style="margin:4px 0 0;font-size:13px;color:#c04a1a;font-weight:500;">${customerEmail}</p>
+            </td>
+            ${priceTag ? `<td style="padding:20px 24px;border-left:1px solid #d6e8f5;text-align:right;">
+              <p style="margin:0 0 2px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Item Price</p>
+              <p style="margin:0;font-size:22px;color:#1a3a5c;font-weight:700;">${priceTag}</p>
+              <p style="margin:4px 0 0;font-size:12px;color:#4a5e72;">${itemName}</p>
+            </td>` : ''}
+          </tr>
+        </table>
+
+        <!-- Message bubble -->
+        <div style="background:#fff;border:1.5px solid #d6e8f5;border-left:5px solid #1a3a5c;padding:20px 24px;margin-bottom:28px;border-radius:0 4px 4px 0;">
+          <p style="margin:0 0 10px;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Their Message</p>
+          <p style="margin:0;font-size:16px;color:#0f1e2e;line-height:1.8;font-style:italic;">"${data.message}"</p>
+        </div>
+
+        <!-- CTA buttons -->
+        <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+          <tr>
+            <td style="padding-right:12px;">
+              <a href="${mailtoReply}" style="background:#c04a1a;color:#fff;padding:14px 32px;text-decoration:none;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;display:inline-block;">
+                ↩ Reply to Customer
+              </a>
+            </td>
+            <td>
+              <a href="https://chic-style-website.vercel.app/admin/enquiries" style="background:#1a3a5c;color:#f0d8c8;padding:14px 32px;text-decoration:none;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;display:inline-block;">
+                View Dashboard →
+              </a>
+            </td>
+          </tr>
+        </table>
+        <p style="margin:0;font-size:12px;color:#8aabb8;line-height:1.6;">
+          Tip: You can also just hit <strong>Reply</strong> in your email app — it goes straight to ${customerName}.
+        </p>
       `), customerEmail)
 
       // 2. Confirm to customer — reply-to admin so customer can reply directly from inbox
       await sendEmail(customerEmail, `We received your question about ${itemName}`, emailWrapper(`
-        <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#c04a1a;font-weight:700;">Question Received</p>
-        <h1 style="margin:0 0 8px;font-size:26px;color:#0f1e2e;font-weight:300;">Thanks, ${customerName}!</h1>
-        <p style="margin:0 0 24px;font-size:15px;color:#4a5e72;line-height:1.7;">
-          We've received your question about <strong>${itemName}</strong> and will reply within 24 hours.<br>
-          You can also <strong>reply directly to this email</strong> if you have anything to add.
-        </p>
-        <div style="background:#f8f4ee;border-left:4px solid #1a3a5c;padding:16px 20px;margin-bottom:28px;">
-          <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Your question</p>
-          <p style="margin:0;font-size:14px;color:#0f1e2e;line-height:1.7;font-style:italic;">"${data.message}"</p>
+        <!-- Success banner -->
+        <div style="background:#1a3a5c;margin:-40px -48px 32px;padding:20px 48px;text-align:center;">
+          <p style="margin:0;font-size:32px;">✉️</p>
+          <p style="margin:8px 0 0;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:rgba(214,232,245,0.7);font-weight:700;">Question Received</p>
         </div>
-        ${data.listing_price ? `
-        <div style="background:#eef5fb;border:1.5px solid #d6e8f5;padding:16px 20px;margin-bottom:28px;">
-          <p style="margin:0 0 4px;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#4a5e72;font-weight:700;">${itemName}</p>
-          <p style="margin:0;font-size:18px;color:#c04a1a;font-weight:700;">$${Number(data.listing_price).toLocaleString()} NZD</p>
+
+        <h1 style="margin:0 0 8px;font-size:28px;color:#0f1e2e;font-weight:300;">Thanks, ${customerName}!</h1>
+        <p style="margin:0 0 28px;font-size:15px;color:#4a5e72;line-height:1.8;">
+          We've received your question about <strong style="color:#0f1e2e;">${itemName}</strong> and will get back to you within 24 hours.<br><br>
+          Simply <strong>reply to this email</strong> if you have anything to add — it comes straight to our team.
+        </p>
+
+        <!-- Item card -->
+        ${priceTag ? `<div style="background:#f8f4ee;border:1.5px solid #d6e8f5;border-left:5px solid #c04a1a;padding:20px 24px;margin-bottom:24px;">
+          <p style="margin:0 0 4px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Item You Asked About</p>
+          <p style="margin:0;font-size:18px;color:#0f1e2e;font-weight:600;">${itemName}</p>
+          <p style="margin:6px 0 0;font-size:20px;color:#c04a1a;font-weight:700;">${priceTag}</p>
         </div>` : ''}
-        <a href="https://chic-style-website.vercel.app/shop" style="background:#1a3a5c;color:#f0d8c8;padding:12px 28px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
+
+        <!-- Their message -->
+        <div style="background:#fff;border:1.5px solid #d6e8f5;padding:20px 24px;margin-bottom:28px;">
+          <p style="margin:0 0 10px;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Your Question</p>
+          <p style="margin:0;font-size:15px;color:#0f1e2e;line-height:1.8;font-style:italic;">"${data.message}"</p>
+        </div>
+
+        <a href="https://chic-style-website.vercel.app/shop" style="background:#1a3a5c;color:#f0d8c8;padding:14px 32px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
           Browse More Furniture →
         </a>
       `), ADMIN_EMAIL)
