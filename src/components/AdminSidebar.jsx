@@ -13,7 +13,10 @@ const NAV = [
       { label: 'Staging Bookings', path: '/admin/quotes' },
     ],
   },
-  { group: 'Customers', items: [{ label: 'Item Enquiries', path: '/admin/enquiries' }] },
+  { group: 'Customers', items: [
+    { label: 'Orders', path: '/admin/orders' },
+    { label: 'Item Enquiries', path: '/admin/enquiries' },
+  ]},
 ];
 
 export default function AdminSidebar() {

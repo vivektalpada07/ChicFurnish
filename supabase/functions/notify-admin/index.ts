@@ -303,6 +303,120 @@ serve(async (req) => {
       `))
     }
 
+    else if (type === 'order') {
+      const itemRows = (data.items || []).map((i: {name:string,condition?:string,price:number}) => `
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #eef5fb;font-size:14px;color:#0f1e2e;font-weight:500;">${i.name}${i.condition ? ` <span style="color:#4a5e72;font-size:12px;">(${i.condition})</span>` : ''}</td>
+          <td style="padding:10px 0;border-bottom:1px solid #eef5fb;font-size:14px;color:#c04a1a;font-weight:700;text-align:right;">$${Number(i.price).toLocaleString()}</td>
+        </tr>`).join('')
+
+      const shippingLabel = data.shipping_option === 'pickup' ? 'Click & Collect — Auckland warehouse' : `Deliver to: ${data.street || ''}, ${data.suburb || ''}, ${data.city || ''} ${data.postcode || ''}`
+      const paymentLabel = data.payment_method === 'bank' ? 'Bank Transfer — details to follow via email' : data.payment_method === 'cash' ? 'Cash on pickup / delivery' : 'Card — our team will contact you'
+
+      // 1. Admin notification
+      await sendEmail(ADMIN_EMAIL, `🛒 New Order ${data.id} — ${data.customer_name}`, emailWrapper(`
+        <div style="background:#1a3a5c;margin:-40px -48px 32px;padding:20px 48px;display:flex;align-items:center;gap:16px;">
+          <span style="font-size:28px;">🛒</span>
+          <div>
+            <p style="margin:0;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:rgba(214,232,245,0.7);font-weight:700;">New Order Received</p>
+            <p style="margin:4px 0 0;font-size:16px;color:#f8f4ee;font-weight:600;">${data.customer_name} · $${Number(data.total).toLocaleString()} NZD</p>
+          </div>
+        </div>
+
+        <!-- Customer card -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;background:#f8f4ee;border:1.5px solid #d6e8f5;">
+          <tr>
+            <td style="padding:18px 24px;">
+              <p style="margin:0 0 2px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Customer</p>
+              <p style="margin:0;font-size:18px;color:#0f1e2e;font-weight:600;">${data.customer_name}</p>
+              <p style="margin:4px 0 0;font-size:13px;color:#c04a1a;">${data.customer_email}</p>
+              ${data.customer_phone ? `<p style="margin:2px 0 0;font-size:13px;color:#4a5e72;">${data.customer_phone}</p>` : ''}
+            </td>
+            <td style="padding:18px 24px;border-left:1px solid #d6e8f5;text-align:right;vertical-align:top;">
+              <p style="margin:0 0 2px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Order Total</p>
+              <p style="margin:0;font-size:26px;color:#c04a1a;font-weight:700;">$${Number(data.total).toLocaleString()}</p>
+              <p style="margin:2px 0 0;font-size:11px;color:#4a5e72;font-weight:600;">NZD</p>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Items -->
+        <p style="margin:0 0 10px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Items Ordered</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+          ${itemRows}
+          <tr>
+            <td style="padding:12px 0;font-family:'Georgia',serif;font-size:16px;color:#0f1e2e;font-weight:600;">Total</td>
+            <td style="padding:12px 0;font-family:'Georgia',serif;font-size:20px;color:#c04a1a;font-weight:700;text-align:right;">$${Number(data.total).toLocaleString()} NZD</td>
+          </tr>
+        </table>
+
+        <!-- Shipping & Payment -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+          <tr>
+            <td style="width:50%;padding:16px;background:#eef5fb;border:1.5px solid #d6e8f5;vertical-align:top;">
+              <p style="margin:0 0 6px;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Shipping</p>
+              <p style="margin:0;font-size:13px;color:#0f1e2e;font-weight:600;line-height:1.6;">${shippingLabel}</p>
+              ${data.notes ? `<p style="margin:6px 0 0;font-size:12px;color:#4a5e72;font-style:italic;">"${data.notes}"</p>` : ''}
+            </td>
+            <td style="width:8px;"></td>
+            <td style="width:50%;padding:16px;background:#eef5fb;border:1.5px solid #d6e8f5;vertical-align:top;">
+              <p style="margin:0 0 6px;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Payment</p>
+              <p style="margin:0;font-size:13px;color:#0f1e2e;font-weight:600;line-height:1.6;">${paymentLabel}</p>
+            </td>
+          </tr>
+        </table>
+
+        <a href="https://chic-style-website.vercel.app/admin/orders" style="background:#c04a1a;color:#fff;padding:14px 32px;text-decoration:none;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;display:inline-block;">
+          View Order in Dashboard →
+        </a>
+      `))
+
+      // 2. Customer confirmation
+      await sendEmail(data.customer_email, `Order Confirmed — ${data.id}`, emailWrapper(`
+        <div style="background:#1a3a5c;margin:-40px -48px 32px;padding:24px 48px;text-align:center;">
+          <p style="margin:0;font-size:36px;">✓</p>
+          <p style="margin:8px 0 0;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:rgba(214,232,245,0.7);font-weight:700;">Order Placed Successfully</p>
+        </div>
+
+        <h1 style="margin:0 0 8px;font-size:28px;color:#0f1e2e;font-weight:300;">Thanks, ${(data.customer_name || '').split(' ')[0]}!</h1>
+        <p style="margin:0 0 28px;font-size:15px;color:#4a5e72;line-height:1.8;">
+          Your order <strong style="color:#0f1e2e;">${data.id}</strong> has been received. We'll be in touch within 24 hours to confirm everything.
+        </p>
+
+        <!-- Items -->
+        <p style="margin:0 0 10px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Your Items</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+          ${itemRows}
+          <tr>
+            <td style="padding:12px 0;font-family:'Georgia',serif;font-size:16px;color:#0f1e2e;font-weight:600;">Total</td>
+            <td style="padding:12px 0;font-family:'Georgia',serif;font-size:20px;color:#c04a1a;font-weight:700;text-align:right;">$${Number(data.total).toLocaleString()} NZD</td>
+          </tr>
+        </table>
+
+        <!-- Shipping & Payment boxes -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+          <tr>
+            <td style="width:50%;padding:16px;background:#f8f4ee;border:1.5px solid #d6e8f5;border-left:4px solid #1a3a5c;vertical-align:top;">
+              <p style="margin:0 0 6px;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Shipping</p>
+              <p style="margin:0;font-size:13px;color:#0f1e2e;font-weight:600;line-height:1.6;">${shippingLabel}</p>
+            </td>
+            <td style="width:8px;"></td>
+            <td style="width:50%;padding:16px;background:#f8f4ee;border:1.5px solid #d6e8f5;border-left:4px solid #c04a1a;vertical-align:top;">
+              <p style="margin:0 0 6px;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Payment</p>
+              <p style="margin:0;font-size:13px;color:#0f1e2e;font-weight:600;line-height:1.6;">${paymentLabel}</p>
+            </td>
+          </tr>
+        </table>
+
+        <p style="margin:0 0 24px;font-size:13px;color:#4a5e72;line-height:1.7;">
+          Questions about your order? Reply to this email and our team will get back to you.
+        </p>
+        <a href="https://chic-style-website.vercel.app/shop" style="background:#1a3a5c;color:#f0d8c8;padding:14px 32px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
+          Continue Shopping →
+        </a>
+      `), ADMIN_EMAIL)
+    }
+
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
