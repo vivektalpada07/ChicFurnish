@@ -8,14 +8,16 @@ const corsHeaders = {
 const FROM = 'Chic Furnish <onboarding@resend.dev>'
 const ADMIN_EMAIL = 'vivektalpada769@gmail.com'
 
-async function sendEmail(to: string, subject: string, html: string) {
+async function sendEmail(to: string, subject: string, html: string, replyTo?: string) {
+  const body: Record<string, unknown> = { from: FROM, to: [to], subject, html }
+  if (replyTo) body.reply_to = replyTo
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${Deno.env.get('RESEND_API_KEY')}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ from: FROM, to: [to], subject, html }),
+    body: JSON.stringify(body),
   })
   if (!res.ok) console.error('Resend error:', await res.json())
 }
@@ -141,14 +143,14 @@ serve(async (req) => {
           <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Message</p>
           <p style="margin:0;font-size:14px;color:#0f1e2e;line-height:1.7;">${data.message}</p>
         </div>
-        <a href="https://chic-style-website.vercel.app/admin/enquiries" style="background:#1a3a5c;color:#f0d8c8;padding:12px 28px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
-          Reply in Dashboard →
-        </a>
-      `))
+        <p style="margin:0 0 24px;font-size:13px;color:#4a5e72;line-height:1.7;">
+          You can reply directly to this email to respond to the customer.
+        </p>
+      `), data.customer_email || data.email)
     }
 
     else if (type === 'enquiry-reply') {
-      // Admin replied — email the customer
+      // Admin replied — email the customer, reply-to goes back to admin inbox
       await sendEmail(data.customer_email, `Re: Your question about ${data.listing_name}`, emailWrapper(`
         <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#c04a1a;font-weight:700;">Reply from Chic Furnish</p>
         <h1 style="margin:0 0 8px;font-size:26px;color:#0f1e2e;font-weight:300;">We've answered your question</h1>
@@ -176,7 +178,7 @@ serve(async (req) => {
         <a href="https://chic-style-website.vercel.app/shop" style="background:#1a3a5c;color:#f0d8c8;padding:12px 28px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
           View Item in Shop →
         </a>
-      `))
+      `), ADMIN_EMAIL)
     }
 
     // ── CUSTOMER CONFIRMATION EMAILS ─────────────────────────
