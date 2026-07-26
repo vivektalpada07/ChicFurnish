@@ -123,15 +123,22 @@ serve(async (req) => {
     }
 
     else if (type === 'enquiry') {
-      // Item enquiry from product page — notify admin
-      await sendEmail(ADMIN_EMAIL, `New Item Enquiry — ${data.listing_name || data.subject || 'General'}`, emailWrapper(`
+      const customerEmail = data.customer_email || data.email
+      const customerName = data.customer_name || data.name
+      const itemName = data.listing_name || 'item'
+
+      // 1. Notify admin — reply-to customer so admin can reply directly from inbox
+      await sendEmail(ADMIN_EMAIL, `New Enquiry: ${itemName} — from ${customerName}`, emailWrapper(`
         <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#c04a1a;font-weight:700;">New Item Enquiry</p>
-        <h1 style="margin:0 0 24px;font-size:26px;color:#0f1e2e;font-weight:300;">Customer Question</h1>
+        <h1 style="margin:0 0 8px;font-size:26px;color:#0f1e2e;font-weight:300;">Customer Question</h1>
+        <p style="margin:0 0 24px;font-size:14px;color:#4a5e72;line-height:1.7;">
+          Hit <strong>Reply</strong> in your email app to respond directly to ${customerName}.
+        </p>
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
           ${[
-            ['From', data.customer_name || data.name],
-            ['Email', data.customer_email || data.email],
-            ['About', data.listing_name || '—'],
+            ['From', customerName],
+            ['Email', customerEmail],
+            ['About', itemName],
             ['Price', data.listing_price ? `$${Number(data.listing_price).toLocaleString()} NZD` : '—'],
           ].map(([k,v]) => `
             <tr>
@@ -139,14 +146,33 @@ serve(async (req) => {
               <td style="padding:8px 0;border-bottom:1px solid #eef5fb;font-size:14px;color:#0f1e2e;font-weight:500;">${v}</td>
             </tr>`).join('')}
         </table>
-        <div style="background:#f8f4ee;border-left:4px solid #1a3a5c;padding:16px 20px;margin-bottom:28px;">
+        <div style="background:#f8f4ee;border-left:4px solid #1a3a5c;padding:16px 20px;">
           <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Message</p>
           <p style="margin:0;font-size:14px;color:#0f1e2e;line-height:1.7;">${data.message}</p>
         </div>
-        <p style="margin:0 0 24px;font-size:13px;color:#4a5e72;line-height:1.7;">
-          You can reply directly to this email to respond to the customer.
+      `), customerEmail)
+
+      // 2. Confirm to customer — reply-to admin so customer can reply directly from inbox
+      await sendEmail(customerEmail, `We received your question about ${itemName}`, emailWrapper(`
+        <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#c04a1a;font-weight:700;">Question Received</p>
+        <h1 style="margin:0 0 8px;font-size:26px;color:#0f1e2e;font-weight:300;">Thanks, ${customerName}!</h1>
+        <p style="margin:0 0 24px;font-size:15px;color:#4a5e72;line-height:1.7;">
+          We've received your question about <strong>${itemName}</strong> and will reply within 24 hours.<br>
+          You can also <strong>reply directly to this email</strong> if you have anything to add.
         </p>
-      `), data.customer_email || data.email)
+        <div style="background:#f8f4ee;border-left:4px solid #1a3a5c;padding:16px 20px;margin-bottom:28px;">
+          <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Your question</p>
+          <p style="margin:0;font-size:14px;color:#0f1e2e;line-height:1.7;font-style:italic;">"${data.message}"</p>
+        </div>
+        ${data.listing_price ? `
+        <div style="background:#eef5fb;border:1.5px solid #d6e8f5;padding:16px 20px;margin-bottom:28px;">
+          <p style="margin:0 0 4px;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:#4a5e72;font-weight:700;">${itemName}</p>
+          <p style="margin:0;font-size:18px;color:#c04a1a;font-weight:700;">$${Number(data.listing_price).toLocaleString()} NZD</p>
+        </div>` : ''}
+        <a href="https://chic-style-website.vercel.app/shop" style="background:#1a3a5c;color:#f0d8c8;padding:12px 28px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
+          Browse More Furniture →
+        </a>
+      `), ADMIN_EMAIL)
     }
 
     else if (type === 'enquiry-reply') {
