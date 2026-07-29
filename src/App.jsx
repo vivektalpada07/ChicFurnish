@@ -17,6 +17,7 @@ import AdminQuotes from './pages/admin/AdminQuotes';
 import AdminInspiration from './pages/admin/AdminInspiration';
 import AdminEnquiries from './pages/admin/AdminEnquiries';
 import AdminOrders from './pages/admin/AdminOrders';
+import CustomerHome from './pages/customer/CustomerHome';
 import CustomerInspiration from './pages/customer/CustomerInspiration';
 import CustomerShop from './pages/customer/CustomerShop';
 import CustomerProfile from './pages/customer/CustomerProfile';
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
 
             {/* Customer - fully public, no login required to browse */}
+            <Route path="/" element={<CustomerHome />} />
             <Route path="/shop" element={<CustomerShop />} />
             <Route path="/shop/:id" element={<CustomerProductDetail />} />
             <Route path="/inspiration" element={<CustomerInspiration />} />
