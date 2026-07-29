@@ -56,7 +56,8 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        <style>{`@media(max-width:768px){.dash-two-col{grid-template-columns:1fr !important;}}`}</style>
+        <div className="dash-two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
 
           {/* Recent Activity */}
           <div className="card">
