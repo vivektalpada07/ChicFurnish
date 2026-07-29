@@ -56,7 +56,7 @@ export default function CustomerContact() {
             </div>
             <div style={{ marginBottom: '2rem' }}>
               <p style={{ fontSize: '0.72rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ink-muted)', fontWeight: 700, marginBottom: '0.5rem' }}>Email</p>
-              <p style={{ color: 'var(--rust)', fontWeight: 600 }}>Chicfurnishliving@gmail.com</p>
+              <a href="mailto:info@chicfurnish.co.nz" style={{ color: 'var(--rust)', fontWeight: 600, textDecoration: 'none' }}>info@chicfurnish.co.nz</a>
             </div>
             <div style={{ marginBottom: '2rem' }}>
               <p style={{ fontSize: '0.72rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ink-muted)', fontWeight: 700, marginBottom: '0.5rem' }}>Hours</p>

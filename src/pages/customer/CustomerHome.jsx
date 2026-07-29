@@ -277,7 +277,7 @@ export default function CustomerHome() {
             <p style={{ fontSize: '0.62rem', letterSpacing: '0.28em', textTransform: 'uppercase', color: '#c9a96e', fontWeight: 700, marginBottom: '1.1rem', fontFamily: 'var(--font-body)' }}>Contact</p>
             <p style={{ fontSize: '0.87rem', color: 'rgba(240,216,200,0.6)', lineHeight: 2 }}>
               Auckland, New Zealand<br />
-              <a href="mailto:hello@chicfurnish.co.nz" style={{ color: 'rgba(240,216,200,0.6)', textDecoration: 'none' }}>hello@chicfurnish.co.nz</a>
+              <a href="mailto:info@chicfurnish.co.nz" style={{ color: 'rgba(240,216,200,0.6)', textDecoration: 'none' }}>info@chicfurnish.co.nz</a>
             </p>
           </div>
           <div>
