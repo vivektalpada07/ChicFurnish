@@ -5,6 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { toast } from '../../components/Toast';
 
+const TIMES = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'];
+
 const CATS = [
   { key: 'all', label: 'All Furniture' },
   { key: 'sofa', label: 'Sofas & Chairs' },
@@ -13,7 +15,6 @@ const CATS = [
   { key: 'cupboard', label: 'Cupboards' },
 ];
 
-const TIMES = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'];
 
 export default function CustomerShop() {
   const navigate = useNavigate();
@@ -87,6 +88,7 @@ export default function CustomerShop() {
     border: '2px solid ' + (activeCat === key ? '#1a3a5c' : '#b8c8d8'),
     marginRight: '-1px', cursor: 'pointer', fontFamily: 'var(--font-body)',
     fontSize: '0.8rem', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 600, transition: 'all 0.2s',
+    whiteSpace: 'nowrap',
   });
 
 
@@ -109,8 +111,8 @@ export default function CustomerShop() {
       </section>
 
       {/* ── FILTER BAR ── */}
-      <div className="shop-filter-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.1rem 3rem', borderBottom: '2px solid #b8c8d8', flexWrap: 'wrap', gap: '1rem' }}>
-        <div className="cat-tabs" style={{ display: 'flex', flexWrap: 'wrap' }}>
+      <div className="shop-filter-bar" style={{ padding: '1.1rem 3rem', borderBottom: '2px solid #b8c8d8' }}>
+        <div className="cat-tabs" style={{ display: 'flex', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
           {CATS.map((c) => <button key={c.key} style={tabStyle(c.key)} onClick={() => setActiveCat(c.key)}>{c.label}</button>)}
         </div>
         <div className="search-sort" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
@@ -263,6 +265,19 @@ export default function CustomerShop() {
           </div>
         </div>
       )}
+
+      <style>{`
+        @media (max-width: 680px) {
+          .shop-header { padding: 1.5rem 1.25rem 1.25rem !important; flex-direction: column !important; align-items: flex-start !important; gap: 0.5rem !important; }
+          .shop-filter-bar { padding: 1rem 1.25rem !important; }
+          .cat-tabs { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 0.5rem !important; margin-bottom: 0.75rem !important; }
+          .cat-tabs button { margin-right: 0 !important; white-space: normal !important; text-align: center !important; padding: 0.6rem 0.5rem !important; font-size: 0.72rem !important; }
+          .search-sort { flex-direction: column !important; align-items: stretch !important; }
+          .search-sort input { width: 100% !important; box-sizing: border-box !important; }
+          .search-sort select { width: 100% !important; }
+          .shop-grid { padding: 1.5rem 1.25rem 3rem !important; gap: 1rem !important; }
+        }
+      `}</style>
     </div>
   );
 }
