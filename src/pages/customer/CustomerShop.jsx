@@ -183,9 +183,9 @@ export default function CustomerShop() {
       <footer style={{ background: '#1a3a5c', padding: '4rem 3rem 3rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', paddingBottom: '3rem', borderBottom: '1px solid rgba(214,232,245,0.2)' }}>
           <div>
-            <p style={{ fontSize: '0.7rem', letterSpacing: '0.32em', textTransform: 'uppercase', color: '#f0a070', marginBottom: '0.75rem', fontWeight: 700 }}>New Pieces</p>
+            <p style={{ fontSize: '0.7rem', letterSpacing: '0.32em', textTransform: 'uppercase', color: '#f0a070', marginBottom: '0.75rem', fontWeight: 700 }}> Pre-owned Funiture</p>
             <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 600, color: '#f8f4ee', marginBottom: '0.75rem' }}>Sourced fresh</h3>
-            <p style={{ fontSize: '0.92rem', color: 'rgba(214,232,245,0.75)', lineHeight: 1.9, fontWeight: 400 }}>Brand new items sourced directly from our suppliers — never staged, never used. First in, first served.</p>
+            <p style={{ fontSize: '0.92rem', color: 'rgba(214,232,245,0.75)', lineHeight: 1.9, fontWeight: 400 }}>Quality items.</p>
           </div>
           <div>
             <p style={{ fontSize: '0.7rem', letterSpacing: '0.32em', textTransform: 'uppercase', color: '#f0a070', marginBottom: '0.75rem', fontWeight: 700 }}>Second Hand</p>

@@ -40,7 +40,8 @@ export default function CustomerHome() {
             Furniture<br />that <em style={{ color: '#c9a96e' }}>sells<br />homes.</em>
           </h1>
           <p style={{ fontSize: '1rem', color: 'rgba(240,216,200,0.8)', lineHeight: 1.8, marginBottom: '2.5rem', maxWidth: 440, fontFamily: 'var(--font-body)' }}>
-            Premium pre-loved furniture for Auckland buyers — and professional home staging that gets properties sold faster.
+            Premium pre-loved furniture for Auckland buyers
+            and Professional home staging that gets properties sold faster.
           </p>
           <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', marginBottom: '3rem' }}>
             <button onClick={() => navigate('/shop')} className="btn-hero-primary">Browse Furniture →</button>
@@ -48,7 +49,7 @@ export default function CustomerHome() {
           </div>
           {/* Stats inline */}
           <div style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap', borderTop: '1px solid rgba(201,169,110,0.2)', paddingTop: '2rem' }}>
-            {[['200+', 'Properties Staged'], ['48hr', 'Avg Staging Time'], ['100%', 'Auckland-Based']].map(([num, label]) => (
+            {[ ['48hr', 'Avg Staging Time'], ['100%', 'Auckland-Based']].map(([num, label]) => (
               <div key={label}>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 600, color: '#c9a96e', lineHeight: 1 }}>{num}</div>
                 <div style={{ fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(240,216,200,0.5)', marginTop: '0.3rem', fontFamily: 'var(--font-body)' }}>{label}</div>
@@ -102,10 +103,10 @@ export default function CustomerHome() {
             Pre-loved pieces,<br /><em>luxury quality</em>
           </h2>
           <p style={{ color: '#4a5e72', lineHeight: 1.8, marginBottom: '1.75rem', fontSize: '0.93rem' }}>
-            Our furniture comes directly from staged properties — well-maintained, photographed professionally, and priced fairly. No auction chaos. Just quality pieces you can view in person before buying.
+           Discover quality pre-owned and used furniture at affordable prices. We carefully select pieces that are well-maintained and ready to be enjoyed again or looking to sell your property? My professional home staging service helps present your home at its best and make a strong impression on buyers.
           </p>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.55rem', marginBottom: '2.25rem' }}>
-            {['View any item in person before buying', 'Bank transfer, cash, or card accepted', 'Delivery available across Auckland'].map((item) => (
+            {['View any item in person before buying', 'Bank transfer upon delivery, cash accepted', 'Delivery available across Auckland'].map((item) => (
               <li key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.7rem', fontSize: '0.87rem', color: '#2a3d52' }}>
                 <span style={{ color: '#c04a1a', fontWeight: 700, flexShrink: 0, marginTop: '2px' }}>✓</span>{item}
               </li>
@@ -126,7 +127,7 @@ export default function CustomerHome() {
             We transform empty properties into aspirational homes that photograph beautifully and attract serious buyers. Trusted by Auckland real estate agents and private sellers alike.
           </p>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.55rem', marginBottom: '2.25rem' }}>
-            {['Full property styling — lounge to bedroom', 'Furniture delivered & installed by our team', 'Available across greater Auckland'].map((item) => (
+            {['Full property styling — lounge to bedroom', 'Furniture delivered & installed ', 'Available across greater Auckland'].map((item) => (
               <li key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.7rem', fontSize: '0.87rem', color: 'rgba(240,216,200,0.82)' }}>
                 <span style={{ color: '#c9a96e', fontWeight: 700, flexShrink: 0, marginTop: '2px' }}>✓</span>{item}
               </li>
@@ -156,7 +157,7 @@ export default function CustomerHome() {
             ), title: 'Book a viewing', desc: 'Reserve a time to see any piece in person at our Auckland location before committing.' },
             { step: '03', icon: (
               <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="4" y="8" width="20" height="14" rx="2" stroke="#1a3a5c" strokeWidth="2"/><path d="M9 8V6a5 5 0 0110 0v2" stroke="#1a3a5c" strokeWidth="2"/><path d="M10 15l3 3 5-5" stroke="#c04a1a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            ), title: 'Buy with confidence', desc: 'Pay by bank transfer, cash, or card. Arrange pickup or delivery across Auckland.' },
+            ), title: 'Buy with confidence', desc: 'Pay by bank transfer, cash. Arrange pickup or delivery across Auckland.' },
             { step: '04', icon: (
               <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M4 6h20v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" stroke="#1a3a5c" strokeWidth="2"/><path d="M4 6l10 9 10-9" stroke="#c04a1a" strokeWidth="2" strokeLinecap="round"/></svg>
             ), title: 'Ask us anything', desc: 'Message us directly from any product page — we reply within one business day.' },
