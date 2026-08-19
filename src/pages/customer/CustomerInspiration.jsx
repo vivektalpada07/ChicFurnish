@@ -4,17 +4,6 @@ import CustomerNav from '../../components/CustomerNav';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 
-// Fallback placeholder cards shown before admin adds real ones
-const PLACEHOLDER_ROOMS = [
-  { id: 'p1', title: 'Coastal Calm Living',    tag: 'Living Room', description: 'Staged for a waterfront Takapuna property', idea: '', gradient: 'linear-gradient(155deg,#a8c8d8 0%,#d8e8f0 45%,#f0e8d8 100%)', isPlaceholder: true },
-  { id: 'p2', title: 'Moody Dining Room',      tag: 'Dining',      description: 'Dramatic dark tones with brass accents',    idea: '', gradient: 'linear-gradient(155deg,#1e1a14 0%,#3c2c14 50%,#806040 100%)', isPlaceholder: true },
-  { id: 'p3', title: 'Boudoir Master Suite',   tag: 'Bedroom',     description: 'Soft linen layers for a Grey Lynn villa',  idea: '', gradient: 'linear-gradient(155deg,#d8b8c0 0%,#e8d0c8 55%,#f4ece4 100%)', isPlaceholder: true },
-  { id: 'p4', title: 'Minimalist Study Nook',  tag: 'Study',       description: 'Curated shelf styling and natural light',  idea: '', gradient: 'linear-gradient(155deg,#c0d4c4 0%,#dce8d8 50%,#f4f0e8 100%)', isPlaceholder: true },
-  { id: 'p5', title: 'Golden Hour Lounge',     tag: 'Living Room', description: 'Warm tones for an inner-city apartment',  idea: '', gradient: 'linear-gradient(155deg,#c07828 0%,#d8a050 45%,#f0d888 100%)', isPlaceholder: true },
-  { id: 'p6', title: 'Travertine Kitchen',     tag: 'Kitchen',     description: 'Stone and rattan styling',                idea: '', gradient: 'linear-gradient(155deg,#a89880 0%,#c8bca8 50%,#e8e0d0 100%)', isPlaceholder: true },
-  { id: 'p7', title: 'Japandi Reading Corner', tag: 'Living Room', description: 'Curated calm for a Mt Eden bungalow',    idea: '', gradient: 'linear-gradient(155deg,#c0b898 0%,#d8d0b8 50%,#eceae0 100%)', isPlaceholder: true },
-  { id: 'p8', title: 'Velvet & Oak Bedroom',   tag: 'Bedroom',     description: 'Rich textures for a Remuera townhouse',  idea: '', gradient: 'linear-gradient(155deg,#281828 0%,#582840 50%,#906858 100%)', isPlaceholder: true },
-];
 
 const TAG_GRADIENTS = {
   'Living Room': 'linear-gradient(155deg,#a8c8d8 0%,#d8e8f0 45%,#f0e8d8 100%)',
@@ -127,7 +116,7 @@ export default function CustomerInspiration() {
       .then(({ data }) => setAllListings(data || []));
   }, []);
 
-  const rooms = dbRooms && dbRooms.length > 0 ? dbRooms : PLACEHOLDER_ROOMS;
+  const rooms = dbRooms || [];
   const filtered = activeTag === 'All' ? rooms : rooms.filter((r) => r.tag === activeTag);
 
   const addToCart = (item) => {
@@ -225,7 +214,13 @@ export default function CustomerInspiration() {
       </div>
 
       {/* ── GALLERY ── */}
-      <section style={{ padding: '2.5rem 2.5rem 5rem', columns: '3 280px', columnGap: '1rem' }}>
+      <section style={{ padding: '2.5rem 2.5rem 5rem', columns: filtered.length > 0 ? '3 280px' : undefined, columnGap: '1rem' }}>
+        {filtered.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '5rem 2rem', color: '#4a5e72' }}>
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', marginBottom: '0.5rem', color: '#1a3a5c' }}>Coming soon</p>
+            <p style={{ fontSize: '0.9rem' }}>Our staging gallery is being updated. Check back shortly.</p>
+          </div>
+        )}
         {filtered.map((room, i) => {
           const h = i % 3 === 0 ? 340 : i % 3 === 1 ? 260 : 300;
           const gradient = room.gradient || TAG_GRADIENTS[room.tag] || TAG_GRADIENTS['Living Room'];
@@ -403,7 +398,7 @@ export default function CustomerInspiration() {
             <div
               key={room.id}
               style={{ breakInside: 'avoid', marginBottom: '1rem', position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
-              onClick={() => !room.isPlaceholder && openDetail(room)}
+              onClick={() => openDetail(room)}
               onMouseEnter={(e) => { e.currentTarget.querySelector('.gallery-img').style.transform = 'scale(1.04)'; }}
               onMouseLeave={(e) => { e.currentTarget.querySelector('.gallery-img').style.transform = 'scale(1)'; }}
             >
@@ -422,12 +417,9 @@ export default function CustomerInspiration() {
                     {allPhotos.length} photos
                   </div>
                 )}
-                {/* "View idea" prompt on non-placeholder cards */}
-                {!room.isPlaceholder && (
-                  <div style={{ position: 'absolute', bottom: '3.5rem', right: '1rem', background: 'rgba(240,160,112,0.9)', color: '#0f1e2e', fontSize: '0.62rem', letterSpacing: '0.15em', textTransform: 'uppercase', padding: '0.3rem 0.65rem', fontWeight: 700 }}>
-                    View Details →
-                  </div>
-                )}
+                <div style={{ position: 'absolute', bottom: '3.5rem', right: '1rem', background: 'rgba(240,160,112,0.9)', color: '#0f1e2e', fontSize: '0.62rem', letterSpacing: '0.15em', textTransform: 'uppercase', padding: '0.3rem 0.65rem', fontWeight: 700 }}>
+                  View Details →
+                </div>
               </div>
 
               {/* Text overlay */}
