@@ -162,7 +162,10 @@ export default function CustomerShop() {
                     <span style={{ fontFamily: 'var(--font-display)', color: 'rgba(26,58,92,0.3)', letterSpacing: '0.3em' }}>{item.category?.toUpperCase()}</span>
                   </div>
               }
-              <span className={`product-card-badge ${item.condition === 'New' ? 'badge-new' : 'badge-used'}`}>{item.condition}</span>
+              {item.stock === 0
+                ? <span className="product-card-badge" style={{ background: '#7a1a00', color: 'white' }}>SOLD</span>
+                : <span className={`product-card-badge ${item.condition === 'New' ? 'badge-new' : 'badge-used'}`}>{item.condition}</span>
+              }
               {(item.photos || []).length > 0 && (
                 <span className="product-card-count">+{(item.photos || []).length}</span>
               )}

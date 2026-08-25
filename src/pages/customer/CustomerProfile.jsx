@@ -33,22 +33,31 @@ export default function CustomerProfile() {
   const { user, logout } = useAuth();
   const [viewings, setViewings] = useState([]);
   const [stagings, setStagings] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('viewings');
 
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
-    fetchBookings();
+    fetchAll();
   }, [user, navigate]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const fetchBookings = async () => {
+  const fetchAll = async () => {
     setLoading(true);
-    const [v, s] = await Promise.all([
+    const [v, s, w] = await Promise.all([
       supabase.from('viewing_bookings').select('*').eq('customer_email', user.email).order('created_at', { ascending: false }),
       supabase.from('staging_bookings').select('*').eq('email', user.email).order('created_at', { ascending: false }),
+      supabase.from('wishlists').select('*, listings(*)').eq('user_id', user.id).order('created_at', { ascending: false }),
     ]);
     setViewings(v.data || []);
     setStagings(s.data || []);
+    setWishlist(w.data || []);
     setLoading(false);
+  };
+
+  const removeWishlist = async (listingId) => {
+    await supabase.from('wishlists').delete().eq('user_id', user.id).eq('listing_id', listingId);
+    setWishlist((prev) => prev.filter((w) => w.listing_id !== listingId));
   };
 
   if (!user) return null;
@@ -70,12 +79,22 @@ export default function CustomerProfile() {
           </button>
         </div>
 
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: 0, marginBottom: '2rem', borderBottom: '2px solid #dde3e8' }}>
+          {[['viewings', 'Viewings'], ['stagings', 'Staging'], ['wishlist', `Wishlist (${wishlist.length})`]].map(([key, label]) => (
+            <button key={key} onClick={() => setActiveTab(key)} style={{ background: 'none', border: 'none', borderBottom: activeTab === key ? '3px solid #c04a1a' : '3px solid transparent', color: activeTab === key ? '#c04a1a' : '#4a5e72', fontFamily: 'var(--font-body)', fontSize: '0.82rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0.75rem 1.25rem', cursor: 'pointer', marginBottom: '-2px' }}>
+              {label}
+            </button>
+          ))}
+        </div>
+
         {loading ? (
-          <p style={{ color: '#4a5e72' }}>Loading your bookings…</p>
+          <p style={{ color: '#4a5e72' }}>Loading…</p>
         ) : (
           <>
             {/* Viewing Bookings */}
-            <section style={{ marginBottom: '2.5rem' }}>
+            {activeTab === 'viewings' && <section style={{ marginBottom: '2.5rem' }}>
+
               <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem', color: '#0f1e2e' }}>
                 Furniture Viewing Requests
               </h2>
@@ -115,10 +134,10 @@ export default function CustomerProfile() {
                   </div>
                 </>
               )}
-            </section>
+            </section>}
 
             {/* Staging Bookings */}
-            <section>
+            {activeTab === 'stagings' && <section>
               <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem', color: '#0f1e2e' }}>
                 Staging Requests
               </h2>
@@ -158,7 +177,43 @@ export default function CustomerProfile() {
                   </div>
                 </>
               )}
-            </section>
+            </section>}
+
+            {/* Wishlist */}
+            {activeTab === 'wishlist' && <section>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem', color: '#0f1e2e' }}>
+                Saved Items
+              </h2>
+              {wishlist.length === 0 ? (
+                <div style={{ background: 'white', border: '1px solid #dde3e8', padding: '2rem', textAlign: 'center' }}>
+                  <p style={{ color: '#4a5e72', marginBottom: '1rem' }}>No saved items yet.</p>
+                  <button onClick={() => navigate('/shop')} style={{ background: '#1a3a5c', color: '#f0d8c8', border: 'none', padding: '0.65rem 1.25rem', fontFamily: 'var(--font-body)', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer' }}>Browse Furniture →</button>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: '1rem' }}>
+                  {wishlist.map((w) => {
+                    const listing = w.listings;
+                    if (!listing) return null;
+                    return (
+                      <div key={w.id} style={{ background: 'white', border: '1px solid #dde3e8', overflow: 'hidden' }}>
+                        <div style={{ height: 160, background: '#dde8f0', position: 'relative', cursor: 'pointer' }} onClick={() => navigate(`/shop/${listing.id}`)}>
+                          {listing.photo_url
+                            ? <img src={listing.photo_url} alt={listing.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: 'rgba(26,58,92,0.3)', fontFamily: 'var(--font-display)' }}>{listing.category}</span></div>
+                          }
+                          {listing.stock === 0 && <span style={{ position: 'absolute', top: 8, left: 8, background: '#7a1a00', color: 'white', fontSize: '0.62rem', fontWeight: 700, padding: '0.2rem 0.5rem', letterSpacing: '0.1em' }}>SOLD</span>}
+                        </div>
+                        <div style={{ padding: '0.9rem' }}>
+                          <p style={{ fontWeight: 600, fontSize: '0.9rem', color: '#0f1e2e', marginBottom: '0.25rem', cursor: 'pointer' }} onClick={() => navigate(`/shop/${listing.id}`)}>{listing.name}</p>
+                          <p style={{ fontFamily: 'var(--font-display)', color: '#c04a1a', fontWeight: 600, marginBottom: '0.75rem' }}>${Number(listing.price).toLocaleString()} NZD</p>
+                          <button onClick={() => removeWishlist(listing.id)} style={{ background: 'none', border: '1px solid #dde3e8', color: '#4a5e72', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '0.4rem 0.75rem', cursor: 'pointer', width: '100%' }}>Remove</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>}
           </>
         )}
       </div>
