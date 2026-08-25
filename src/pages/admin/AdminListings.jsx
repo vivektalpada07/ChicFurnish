@@ -3,7 +3,7 @@ import AdminSidebar from '../../components/AdminSidebar';
 import { supabase } from '../../lib/supabase';
 
 const CATEGORIES = ['All', 'sofa', 'table', 'rug', 'cupboard'];
-const EMPTY_FORM = { name: '', category: 'sofa', price: '', condition: 'New', status: 'available', description: '' };
+const EMPTY_FORM = { name: '', category: 'sofa', price: '', condition: 'New', status: 'available', description: '', stock: 1 };
 const BUCKET = 'listing-photos';
 
 export default function AdminListings() {
@@ -44,7 +44,7 @@ export default function AdminListings() {
 
   const openEdit = (item) => {
     setEditItem(item);
-    setForm({ name: item.name, category: item.category, price: item.price, condition: item.condition, status: item.status, description: item.description || '' });
+    setForm({ name: item.name, category: item.category, price: item.price, condition: item.condition, status: item.status, description: item.description || '', stock: item.stock ?? 1 });
     setPhotoFile(null);
     setPhotoPreview(item.photo_url || null);
     setAdditionalPhotos((item.photos || []).map((url) => ({ file: null, preview: url, existingUrl: url })));
@@ -103,6 +103,7 @@ export default function AdminListings() {
       condition: form.condition,
       status: form.status,
       description: form.description,
+      stock: Number(form.stock),
       photo_url,
       photos: uploadedAdditional,
     };
@@ -256,12 +257,18 @@ export default function AdminListings() {
               </div>
               <div className="grid-2">
                 <div className="form-group">
+                  <label className="form-label">Stock Quantity</label>
+                  <input className="form-input" type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} placeholder="1" />
+                </div>
+                <div className="form-group">
                   <label className="form-label">Condition</label>
                   <select className="form-select" value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value })}>
                     <option value="New">New</option>
                     <option value="Second Hand">Second Hand</option>
                   </select>
                 </div>
+              </div>
+              <div className="grid-2">
                 <div className="form-group">
                   <label className="form-label">Status</label>
                   <select className="form-select" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>

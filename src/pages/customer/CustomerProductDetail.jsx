@@ -17,6 +17,8 @@ export default function CustomerProductDetail() {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lightbox, setLightbox] = useState(false);
+  const [wishlisted, setWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   const [enquiryOpen, setEnquiryOpen] = useState(false);
   const [enquiryMsg, setEnquiryMsg] = useState('');
@@ -32,11 +34,29 @@ export default function CustomerProductDetail() {
 
   useEffect(() => {
     supabase.from('listings').select('*').eq('id', id).single()
-      .then(({ data }) => {
-        setItem(data);
-        setLoading(false);
-      });
+      .then(({ data }) => { setItem(data); setLoading(false); });
   }, [id]);
+
+  useEffect(() => {
+    if (!user || !id) return;
+    supabase.from('wishlists').select('id').eq('user_id', user.id).eq('listing_id', id).maybeSingle()
+      .then(({ data }) => setWishlisted(!!data));
+  }, [user, id]);
+
+  const toggleWishlist = async () => {
+    if (!user) { navigate('/login'); return; }
+    setWishlistLoading(true);
+    if (wishlisted) {
+      await supabase.from('wishlists').delete().eq('user_id', user.id).eq('listing_id', id);
+      setWishlisted(false);
+      toast('Removed from wishlist');
+    } else {
+      await supabase.from('wishlists').insert({ user_id: user.id, listing_id: id });
+      setWishlisted(true);
+      toast('Added to wishlist ♥');
+    }
+    setWishlistLoading(false);
+  };
 
   const openEnquiry = () => {
     if (!user) { navigate('/login'); return; }
@@ -279,15 +299,30 @@ export default function CustomerProductDetail() {
 
           {/* CTA buttons */}
           <div className="pdp-actions">
-            <button
-              className="pdp-btn-primary"
-              style={{ background: cart.find((c) => c.id === item.id) ? '#2e6b42' : undefined }}
-              onClick={() => { addToCart(item); openCart(); }}
-            >
-              {cart.find((c) => c.id === item.id) ? '✓ Added to Cart' : '+ Add to Cart'}
-            </button>
+            {item.stock === 0 ? (
+              <button className="pdp-btn-primary" disabled style={{ background: '#7a1a00', opacity: 0.7, cursor: 'not-allowed' }}>
+                Sold Out
+              </button>
+            ) : (
+              <button
+                className="pdp-btn-primary"
+                style={{ background: cart.find((c) => c.id === item.id) ? '#2e6b42' : undefined }}
+                onClick={() => { addToCart(item); openCart(); }}
+              >
+                {cart.find((c) => c.id === item.id) ? '✓ Added to Cart' : '+ Add to Cart'}
+              </button>
+            )}
             <button className="pdp-btn-secondary" onClick={openViewing}>
               Book a Viewing
+            </button>
+          </div>
+          <div style={{ marginTop: '0.75rem' }}>
+            <button
+              onClick={toggleWishlist}
+              disabled={wishlistLoading}
+              style={{ background: wishlisted ? '#fdf0eb' : 'none', border: '1.5px solid ' + (wishlisted ? '#c04a1a' : '#b8c8d8'), color: wishlisted ? '#c04a1a' : '#1a3a5c', padding: '0.65rem 1.2rem', fontFamily: 'var(--font-body)', fontSize: '0.78rem', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer', width: '100%', transition: 'all 0.2s' }}
+            >
+              {wishlisted ? '♥ Saved to Wishlist' : '♡ Save to Wishlist'}
             </button>
           </div>
           <div style={{ marginTop: '0.75rem' }}>
