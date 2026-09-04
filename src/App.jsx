@@ -23,6 +23,7 @@ import CustomerShop from './pages/customer/CustomerShop';
 import CustomerProfile from './pages/customer/CustomerProfile';
 import CustomerContact from './pages/customer/CustomerContact';
 import CustomerProductDetail from './pages/customer/CustomerProductDetail';
+import Policies from './pages/customer/Policies';
 
 function AdminRoute({ children }) {
   const { user } = useAuth();
@@ -62,7 +63,7 @@ export default function App() {
             <Route path="/inspiration" element={<CustomerInspiration />} />
             <Route path="/profile" element={<CustomerProfile />} />
             <Route path="/contact" element={<CustomerContact />} />
-
+<Route path="/policies" element={<Policies />} />
             {/* 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>

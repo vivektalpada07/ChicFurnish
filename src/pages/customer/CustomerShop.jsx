@@ -110,6 +110,21 @@ export default function CustomerShop() {
         </div>
       </section>
 
+      {/* ── SHOP INTRO ── */}
+      <div style={{ padding: '1.5rem 3rem 0', maxWidth: 780 }}>
+        <p style={{ fontSize: '0.9rem', color: '#2a3d52', lineHeight: 1.8 }}>
+          We sell furniture sourced from professionally staged Auckland properties, along with quality
+          pre-owned pieces. All furniture details are in the description — please make sure to read it
+          before purchasing.{' '}
+          <span
+            onClick={() => navigate('/policies')}
+            style={{ color: '#c04a1a', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+          >
+            View our delivery &amp; returns policy →
+          </span>
+        </p>
+      </div>
+
       {/* ── FILTER BAR ── */}
       <div className="shop-filter-bar" style={{ padding: '1.1rem 3rem', borderBottom: '2px solid #b8c8d8' }}>
         <div className="cat-tabs" style={{ display: 'flex', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
@@ -184,19 +199,33 @@ export default function CustomerShop() {
 
       {/* ── FOOTER ── */}
       <footer style={{ background: '#1a3a5c', padding: '4rem 3rem 3rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', paddingBottom: '3rem', borderBottom: '1px solid rgba(214,232,245,0.2)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', paddingBottom: '2rem', borderBottom: '1px solid rgba(214,232,245,0.2)' }}>
           <div>
-            <p style={{ fontSize: '0.7rem', letterSpacing: '0.32em', textTransform: 'uppercase', color: '#f0a070', marginBottom: '0.75rem', fontWeight: 700 }}> Pre-owned Funiture</p>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 600, color: '#f8f4ee', marginBottom: '0.75rem' }}>Sourced fresh</h3>
-            <p style={{ fontSize: '0.92rem', color: 'rgba(214,232,245,0.75)', lineHeight: 1.9, fontWeight: 400 }}>Quality items.</p>
+            <p style={{ fontSize: '0.7rem', letterSpacing: '0.32em', textTransform: 'uppercase', color: '#f0a070', marginBottom: '0.75rem', fontWeight: 700 }}>Pre-owned Furniture</p>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 600, color: '#f8f4ee', marginBottom: '0.75rem' }}>Thoughtfully sourced</h3>
+            <p style={{ fontSize: '0.92rem', color: 'rgba(214,232,245,0.75)', lineHeight: 1.9, fontWeight: 400 }}>A mix of new and gently used pieces, each one selected for quality.</p>
           </div>
           <div>
-            <p style={{ fontSize: '0.7rem', letterSpacing: '0.32em', textTransform: 'uppercase', color: '#f0a070', marginBottom: '0.75rem', fontWeight: 700 }}>Second Hand</p>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 600, color: '#f8f4ee', marginBottom: '0.75rem' }}>Pre-loved, post-staged</h3>
-            <p style={{ fontSize: '0.92rem', color: 'rgba(214,232,245,0.75)', lineHeight: 1.9, fontWeight: 400 }}>Professionally staged items from sold properties. Each piece inspected, cleaned, and priced well below retail.</p>
+            <p style={{ fontSize: '0.7rem', letterSpacing: '0.32em', textTransform: 'uppercase', color: '#f0a070', marginBottom: '0.75rem', fontWeight: 700 }}>Staging Pieces</p>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 600, color: '#f8f4ee', marginBottom: '0.75rem' }}>Styled once, ready for you</h3>
+            <p style={{ fontSize: '0.92rem', color: 'rgba(214,232,245,0.75)', lineHeight: 1.9, fontWeight: 400 }}>Some pieces come from professional home staging — used briefly to showcase a property, then made available at a fraction of retail.</p>
           </div>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '2rem' }}>
+
+        {/* ── SANITISED / CLEANED REASSURANCE LINE ── */}
+        <p style={{ textAlign: 'center', fontSize: '0.85rem', color: 'rgba(214,232,245,0.65)', fontWeight: 500, padding: '1.25rem 0 0.5rem' }}>
+          All upholstery is professionally sanitised and cleaned before listing.
+        </p>
+
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', paddingTop: '1.25rem', paddingBottom: '1.5rem', flexWrap: 'wrap' }}>
+          <span onClick={() => navigate('/policies')} style={{ fontSize: '0.85rem', color: 'rgba(214,232,245,0.85)', cursor: 'pointer', fontWeight: 600 }}>
+            Delivery &amp; Returns
+          </span>
+          <span onClick={() => navigate('/contact')} style={{ fontSize: '0.85rem', color: 'rgba(214,232,245,0.85)', cursor: 'pointer', fontWeight: 600 }}>
+            Contact Us
+          </span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1.5rem', borderTop: '1px solid rgba(214,232,245,0.1)' }}>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 600, color: '#f8f4ee', letterSpacing: '0.15em' }}>CHIC <span style={{ color: '#f0a070' }}>FURNISH</span></span>
           <span style={{ fontSize: '0.82rem', color: 'rgba(214,232,245,0.5)' }}>© 2026 Chic Furnish · Auckland, New Zealand</span>
         </div>

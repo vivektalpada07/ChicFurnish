@@ -3,6 +3,9 @@ import CustomerNav from '../../components/CustomerNav';
 import { supabase } from '../../lib/supabase';
 import { toast } from '../../components/Toast';
 
+const INSTAGRAM_URL = 'https://www.instagram.com/chic_furnish?igsi=MTc0NzVkeHcxbzNzOQ%3D%3D&utm_source=qr';
+const INSTAGRAM_QR = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=${encodeURIComponent(INSTAGRAM_URL)}`;
+
 export default function CustomerContact() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
   const [error, setError] = useState('');
@@ -59,12 +62,31 @@ export default function CustomerContact() {
               <a href="mailto:info@chicfurnish.co.nz" style={{ color: 'var(--rust)', fontWeight: 600, textDecoration: 'none' }}>info@chicfurnish.co.nz</a>
             </div>
             <div style={{ marginBottom: '2rem' }}>
-              <p style={{ fontSize: '0.72rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ink-muted)', fontWeight: 700, marginBottom: '0.5rem' }}>Hours</p>
-              <p style={{ color: 'var(--ink)', lineHeight: 1.7 }}>Mon – Fri: 9am – 5pm<br />Sat: 10am – 3pm</p>
-            </div>
-            <div>
               <p style={{ fontSize: '0.72rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ink-muted)', fontWeight: 700, marginBottom: '0.5rem' }}>Response Time</p>
               <p style={{ color: 'var(--ink)', lineHeight: 1.7 }}>We reply within 1 business day.</p>
+            </div>
+
+            {/* Instagram + QR */}
+            <div>
+              <p style={{ fontSize: '0.72rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ink-muted)', fontWeight: 700, marginBottom: '0.75rem' }}>Follow Us</p>
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'inline-block', color: 'var(--rust)', fontWeight: 600, textDecoration: 'none', marginBottom: '0.9rem' }}
+              >
+                @chic_furnish on Instagram
+              </a>
+              <div>
+                <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', border: '1.5px solid var(--border)', padding: '0.6rem', background: 'white' }}>
+                  <img
+                    src={INSTAGRAM_QR}
+                    alt="Scan to visit Chic Furnish on Instagram"
+                    style={{ display: 'block', width: 120, height: 120 }}
+                  />
+                </a>
+                <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', marginTop: '0.5rem' }}>Scan to follow</p>
+              </div>
             </div>
           </div>
 

@@ -455,6 +455,139 @@ export default function CustomerInspiration() {
         </div>
       </section>
 
+      {/* ── PRICING ── */}
+      <section style={{ padding: 'clamp(3rem, 6vw, 6rem) clamp(1.5rem, 6vw, 5rem)', background: '#f8f4ee' }}>
+        <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
+          <p style={{ fontSize: '0.7rem', letterSpacing: '0.32em', textTransform: 'uppercase', color: '#c04a1a', fontWeight: 700, marginBottom: '1rem' }}>Pricing</p>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 600, color: '#0f1e2e' }}>
+            Full Home-Staging <em style={{ color: '#2e5f8a' }}>Packages</em>
+          </h2>
+          <p style={{ fontSize: '0.9rem', color: '#4a5e72', marginTop: '0.75rem' }}>Auckland — Full Staging</p>
+        </div>
+
+        {/* Full Staging Table */}
+        <div style={{ maxWidth: 760, margin: '0 auto 4rem', border: '2px solid #b8c8d8', background: 'white' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#1a3a5c' }}>
+                <th style={{ padding: '1rem 1.5rem', textAlign: 'left', color: '#f0d8c8', fontFamily: 'var(--font-body)', fontSize: '0.75rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700 }}>Property Type</th>
+                <th style={{ padding: '1rem 1.5rem', textAlign: 'right', color: '#f0d8c8', fontFamily: 'var(--font-body)', fontSize: '0.75rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700 }}>5-Week Staging From</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ['1–2 Bedroom', '$1,499'],
+                ['3 Bedroom', '$2,050'],
+                ['4 Bedroom', '$2,500'],
+                ['5+ Bedroom', '$2,900'],
+              ].map(([type, price], i) => (
+                <tr key={type} style={{ borderTop: '1px solid #ede7dc', background: i % 2 === 0 ? 'white' : '#f8f4ee' }}>
+                  <td style={{ padding: '1rem 1.5rem', color: '#0f1e2e', fontSize: '0.92rem', fontWeight: 500 }}>{type}</td>
+                  <td style={{ padding: '1rem 1.5rem', textAlign: 'right', fontFamily: 'var(--font-display)', fontSize: '1.1rem', color: '#c04a1a', fontWeight: 600 }}>{price}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p style={{ padding: '1.25rem 1.5rem', fontSize: '0.85rem', color: '#4a5e72', lineHeight: 1.8, borderTop: '2px solid #ede7dc' }}>
+            All standard full-staging packages include a 5-week hire period and professionally selected furniture, artwork, quality bed linen, cushions, lamps, rugs and décor accessories.
+          </p>
+        </div>
+
+        {/* Partial Staging */}
+        <div style={{ maxWidth: 760, margin: '0 auto 4rem' }}>
+          <div style={{ width: 40, height: 3, background: '#c9a96e', marginBottom: '1.25rem' }} />
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 600, color: '#0f1e2e', marginBottom: '0.75rem' }}>
+            Partial Staging & Extra Spaces
+          </h3>
+          <p style={{ fontSize: '0.92rem', color: '#2a3d52', lineHeight: 1.85, marginBottom: '1.5rem' }}>
+            If your home is partially furnished or occupied, our partial staging service works with your existing furniture to create warmth, balance and cohesion across key selling areas.
+          </p>
+
+          <div style={{ border: '2px solid #b8c8d8', background: 'white', marginBottom: '1.5rem' }}>
+            {[
+              ['Partial Staging — Accessories / Key Items', 'From a few hundred dollars, depending on requirements'],
+              ['Partial Staging — Key Living Areas', 'From $1,900'],
+            ].map(([label, price], i) => (
+              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', borderTop: i === 0 ? 'none' : '1px solid #ede7dc', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.92rem', color: '#0f1e2e', fontWeight: 500 }}>{label}</span>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', color: '#c04a1a', fontWeight: 600, whiteSpace: 'nowrap' }}>{price}</span>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ fontSize: '0.8rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#1a3a5c', fontWeight: 700, marginBottom: '0.75rem' }}>Additional Areas</p>
+          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1.25rem' }}>
+            {[
+              ['Bedroom / Home Office / Outdoor Area', '$100 each'],
+              ['Living Room / Open-Plan Lounge', '$200 each'],
+              ['Bathroom / Ensuite / Laundry Styling', 'Included at no additional charge'],
+              ['Multi-Level / Extra-Large Properties', 'Price on Application (POA)'],
+            ].map(([label, price]) => (
+              <li key={label} style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', fontSize: '0.88rem', color: '#2a3d52', flexWrap: 'wrap' }}>
+                <span><span style={{ color: '#c04a1a', fontWeight: 700, marginRight: '0.5rem' }}>✓</span>{label}</span>
+                <span style={{ fontWeight: 600, color: '#0f1e2e' }}>{price}</span>
+              </li>
+            ))}
+          </ul>
+          <p style={{ fontSize: '0.82rem', color: '#4a5e72', fontStyle: 'italic' }}>
+            Properties located outside our standard delivery zones may incur additional transport or travel charges.
+          </p>
+        </div>
+
+        {/* Campaign Extensions */}
+        <div style={{ maxWidth: 760, margin: '0 auto' }}>
+          <div style={{ width: 40, height: 3, background: '#c9a96e', marginBottom: '1.25rem' }} />
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 600, color: '#0f1e2e', marginBottom: '0.75rem' }}>
+            Campaign Extensions
+          </h3>
+          <p style={{ fontSize: '0.92rem', color: '#2a3d52', lineHeight: 1.85, marginBottom: '1.5rem' }}>
+            Need more time to sell? Extensions can be arranged after the initial 5-week staging period, with a minimum 2-week extension. Extension rates are based on your original staging package:
+          </p>
+
+          <div style={{ border: '2px solid #b8c8d8', background: 'white' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#1a3a5c' }}>
+                  <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', color: '#f0d8c8', fontFamily: 'var(--font-body)', fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700 }}>Original Staging Package</th>
+                  <th style={{ padding: '0.9rem 1.25rem', textAlign: 'right', color: '#f0d8c8', fontFamily: 'var(--font-body)', fontSize: '0.72rem', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700 }}>Extension Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['Up to $1,200', '$150 / week'],
+                  ['$1,225 – $2,025', '$200 / week'],
+                  ['$2,050 – $2,250', '$250 / week'],
+                  ['$2,275 – $2,600', '$300 / week'],
+                  ['$2,625 and over', '$350 / week'],
+                ].map(([range, rate], i) => (
+                  <tr key={range} style={{ borderTop: '1px solid #ede7dc', background: i % 2 === 0 ? 'white' : '#f8f4ee' }}>
+                    <td style={{ padding: '0.85rem 1.25rem', color: '#0f1e2e', fontSize: '0.88rem', fontWeight: 500 }}>{range}</td>
+                    <td style={{ padding: '0.85rem 1.25rem', textAlign: 'right', fontFamily: 'var(--font-display)', fontSize: '1rem', color: '#c04a1a', fontWeight: 600 }}>{rate}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* ── BOOK TODAY CTA ── */}
+      <section style={{ padding: 'clamp(3rem, 6vw, 5rem) clamp(1.5rem, 6vw, 5rem)', textAlign: 'center', background: '#ede7dc', borderTop: '2px solid #b8c8d8' }}>
+        <p style={{ fontSize: '0.68rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#c04a1a', fontWeight: 700, marginBottom: '0.75rem' }}>Book Your Staging Today</p>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem,3.5vw,2.6rem)', fontWeight: 600, color: '#0f1e2e', marginBottom: '1rem' }}>
+          Ready to present your property at its best?
+        </h2>
+        <p style={{ color: '#4a5e72', maxWidth: 480, margin: '0 auto 2rem', fontSize: '0.92rem', lineHeight: 1.85 }}>
+          Get in touch for a tailored quote or to schedule your staging date.
+        </p>
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button style={darkBtn} onClick={openStaging}>Request a Quote</button>
+          <a href="mailto:info@chicfurnish.co.nz" style={{ ...rustOutlineBtn, textDecoration: 'none', display: 'inline-block' }}>
+            info@chicfurnish.co.nz
+          </a>
+        </div>
+      </section>
+
       {/* ── FOOTER ── */}
       <footer style={{ background: '#1a3a5c', padding: '3rem 3rem 2.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
