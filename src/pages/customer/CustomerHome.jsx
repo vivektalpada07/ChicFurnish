@@ -31,54 +31,72 @@ export default function CustomerHome() {
 
       {/* ── HERO ── */}
       <section className="hero-section">
-        {/* Left: text */}
-        <div className="hero-text">
-          <p style={{ fontSize: '0.7rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: '#c9a96e', fontWeight: 700, marginBottom: '1.25rem', fontFamily: 'var(--font-body)' }}>
-            Auckland, New Zealand
-          </p>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(3.2rem, 5.5vw, 6rem)', fontWeight: 600, lineHeight: 1.0, color: '#f8f4ee', marginBottom: '1.5rem' }}>
-            Furniture<br />that <em style={{ color: '#c9a96e' }}>sells<br />homes.</em>
-          </h1>
-          <p style={{ fontSize: '1rem', color: 'rgba(240,216,200,0.8)', lineHeight: 1.8, marginBottom: '2.5rem', maxWidth: 440, fontFamily: 'var(--font-body)' }}>
-            Premium pre-loved furniture for Auckland buyers
-            and Professional home staging that gets properties sold faster.
-          </p>
-          <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', marginBottom: '3rem' }}>
-            <button onClick={() => navigate('/shop')} className="btn-hero-primary">Browse Furniture →</button>
-            <button onClick={() => navigate('/inspiration')} className="btn-hero-outline">View Staging Work</button>
-          </div>
-          {/* Stats inline */}
-          <div style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap', borderTop: '1px solid rgba(201,169,110,0.2)', paddingTop: '2rem' }}>
-            {[ ['48hr', 'Avg Staging Time'], ['100%', 'Auckland-Based']].map(([num, label]) => (
-              <div key={label}>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 600, color: '#c9a96e', lineHeight: 1 }}>{num}</div>
-                <div style={{ fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(240,216,200,0.5)', marginTop: '0.3rem', fontFamily: 'var(--font-body)' }}>{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Illustrated line-art pattern overlay */}
+        <svg className="hero-pattern" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" aria-hidden="true">
+          {/* Sofa outline */}
+          <g stroke="#b5a48a" strokeWidth="1" fill="none" opacity="0.45">
+            <rect x="60" y="310" width="180" height="80" rx="8"/>
+            <rect x="60" y="280" width="180" height="35" rx="6"/>
+            <rect x="55" y="310" width="25" height="65" rx="4"/>
+            <rect x="215" y="310" width="25" height="65" rx="4"/>
+            <rect x="75" y="390" width="15" height="20" rx="3"/>
+            <rect x="205" y="390" width="15" height="20" rx="3"/>
+          </g>
+          {/* Floor lamp */}
+          <g stroke="#b5a48a" strokeWidth="1" fill="none" opacity="0.4">
+            <line x1="620" y1="180" x2="620" y2="420"/>
+            <ellipse cx="620" cy="420" rx="25" ry="6"/>
+            <path d="M590 180 Q620 140 650 180 Z"/>
+            <line x1="605" y1="170" x2="635" y2="170"/>
+          </g>
+          {/* Plant / leaves */}
+          <g stroke="#b5a48a" strokeWidth="1" fill="none" opacity="0.38">
+            <ellipse cx="700" cy="380" rx="12" ry="22" transform="rotate(-25 700 380)"/>
+            <ellipse cx="720" cy="370" rx="12" ry="22" transform="rotate(15 720 370)"/>
+            <ellipse cx="710" cy="360" rx="10" ry="20" transform="rotate(-5 710 360)"/>
+            <line x1="710" y1="400" x2="710" y2="440"/>
+            <ellipse cx="710" cy="445" rx="18" ry="6"/>
+          </g>
+          {/* Side table */}
+          <g stroke="#b5a48a" strokeWidth="1" fill="none" opacity="0.35">
+            <ellipse cx="130" cy="170" rx="40" ry="12"/>
+            <line x1="100" y1="172" x2="95" y2="260"/>
+            <line x1="160" y1="172" x2="165" y2="260"/>
+            <line x1="130" y1="182" x2="130" y2="260"/>
+            <line x1="95" y1="240" x2="165" y2="240"/>
+          </g>
+          {/* Decorative circular lines */}
+          <circle cx="400" cy="300" r="260" stroke="#c9a96e" strokeWidth="0.5" opacity="0.12"/>
+          <circle cx="400" cy="300" r="200" stroke="#c9a96e" strokeWidth="0.5" opacity="0.1"/>
+          {/* Picture frame */}
+          <g stroke="#b5a48a" strokeWidth="1" fill="none" opacity="0.3">
+            <rect x="520" y="100" width="100" height="130" rx="2"/>
+            <rect x="528" y="108" width="84" height="114" rx="1"/>
+            <line x1="528" y1="108" x2="612" y2="222"/>
+            <line x1="612" y1="108" x2="528" y2="222"/>
+          </g>
+          {/* Rug outline */}
+          <g stroke="#b5a48a" strokeWidth="1" fill="none" opacity="0.28">
+            <ellipse cx="250" cy="480" rx="160" ry="55"/>
+            <ellipse cx="250" cy="480" rx="140" ry="45"/>
+            <ellipse cx="250" cy="480" rx="100" ry="30"/>
+          </g>
+        </svg>
 
-        {/* Right: image panel */}
-        <div className="hero-image-panel">
-          {heroImg ? (
-            <img src={heroImg} alt="Featured furniture" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-          ) : (
-            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #0f2034 0%, #1a3a5c 40%, #0f2a40 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', border: '1px solid rgba(201,169,110,0.08)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }} />
-              <div style={{ position: 'absolute', width: 280, height: 280, borderRadius: '50%', border: '1px solid rgba(201,169,110,0.12)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }} />
-              <div style={{ position: 'absolute', width: 160, height: 160, borderRadius: '50%', border: '1px solid rgba(201,169,110,0.18)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }} />
-              <div style={{ width: 40, height: 3, background: '#c9a96e', marginBottom: '1.5rem', position: 'relative', zIndex: 1 }} />
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', color: 'rgba(240,216,200,0.9)', letterSpacing: '0.15em', textAlign: 'center', position: 'relative', zIndex: 1, fontWeight: 400 }}>Luxury Staging</p>
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.72rem', color: 'rgba(201,169,110,0.7)', letterSpacing: '0.3em', textAlign: 'center', position: 'relative', zIndex: 1, marginTop: '0.5rem', textTransform: 'uppercase' }}>Auckland, New Zealand</p>
-            </div>
-          )}
-          {/* Overlay badge */}
-          {heroImg && (
-            <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.5rem', background: 'rgba(15,30,46,0.85)', backdropFilter: 'blur(8px)', padding: '0.75rem 1.1rem', borderLeft: '3px solid #c9a96e' }}>
-              <p style={{ fontSize: '0.65rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#c9a96e', fontFamily: 'var(--font-body)', fontWeight: 700 }}>Now Available</p>
-              <p style={{ fontSize: '0.88rem', color: '#f8f4ee', fontFamily: 'var(--font-display)', marginTop: '0.2rem' }}>{featured[0]?.name}</p>
-            </div>
-          )}
+        {/* Hero content */}
+        <div className="hero-content">
+          <p className="hero-eyebrow">Luxury Home Staging · Auckland, NZ</p>
+          <h1 className="hero-headline">
+            Spaces that make<br />
+            <em className="hero-headline-em">people feel something</em>
+          </h1>
+          <p className="hero-sub">
+            We transform New Zealand properties into aspirational homes — curated luxury furniture, expert styling, unforgettable first impressions.
+          </p>
+          <div className="hero-ctas">
+            <button onClick={() => navigate('/contact')} className="btn-hero-dark">Book a Staging</button>
+            <button onClick={() => navigate('/shop')} className="btn-hero-ghost">Browse Furniture →</button>
+          </div>
         </div>
       </section>
 
@@ -291,37 +309,81 @@ export default function CustomerHome() {
       <style>{`
         /* ── HERO ── */
         .hero-section {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          min-height: 90vh;
-          background: linear-gradient(135deg, #0f1e2e 0%, #1a3a5c 60%, #2e5f8a 100%);
-        }
-        .hero-text {
-          padding: clamp(3rem, 6vw, 7rem) clamp(1.5rem, 5vw, 5rem);
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-        }
-        .hero-image-panel {
           position: relative;
+          min-height: 88vh;
+          background: #faf7f2;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           overflow: hidden;
-          background: rgba(0,0,0,0.2);
-          min-height: 400px;
+          padding: clamp(4rem, 8vw, 8rem) clamp(1.5rem, 8vw, 6rem);
+          text-align: center;
         }
-        .btn-hero-primary {
-          background: #c04a1a; border: none; color: white;
-          padding: 1rem 2rem; font-family: var(--font-body);
-          font-size: 0.83rem; letter-spacing: 0.18em; text-transform: uppercase;
+        .hero-pattern {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          z-index: 0;
+        }
+        .hero-content {
+          position: relative;
+          z-index: 1;
+          max-width: 780px;
+          margin: 0 auto;
+        }
+        .hero-eyebrow {
+          font-size: 0.68rem;
+          letter-spacing: 0.38em;
+          text-transform: uppercase;
+          color: #9e8b6e;
+          font-weight: 700;
+          margin-bottom: 1.5rem;
+          font-family: var(--font-body);
+        }
+        .hero-headline {
+          font-family: var(--font-display);
+          font-size: clamp(2.8rem, 6vw, 5.2rem);
+          font-weight: 600;
+          line-height: 1.12;
+          color: #1a2b3c;
+          margin-bottom: 1.75rem;
+        }
+        .hero-headline-em {
+          font-style: italic;
+          color: #b07d3a;
+        }
+        .hero-sub {
+          font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+          color: #5a6e7f;
+          line-height: 1.85;
+          max-width: 560px;
+          margin: 0 auto 2.75rem;
+          font-family: var(--font-body);
+        }
+        .hero-ctas {
+          display: flex;
+          gap: 1rem;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        .btn-hero-dark {
+          background: #1a2b3c; border: none; color: #f8f4ee;
+          padding: 1rem 2.25rem; font-family: var(--font-body);
+          font-size: 0.78rem; letter-spacing: 0.22em; text-transform: uppercase;
           font-weight: 700; cursor: pointer; white-space: nowrap;
+          transition: background 0.2s;
         }
-        .btn-hero-primary:hover { background: #a03a10; }
-        .btn-hero-outline {
-          background: transparent; border: 2px solid rgba(240,216,200,0.35);
-          color: #f0d8c8; padding: 1rem 2rem; font-family: var(--font-body);
-          font-size: 0.83rem; letter-spacing: 0.18em; text-transform: uppercase;
-          font-weight: 600; cursor: pointer; white-space: nowrap;
+        .btn-hero-dark:hover { background: #0f1e2e; }
+        .btn-hero-ghost {
+          background: transparent; border: 2px solid #1a2b3c;
+          color: #1a2b3c; padding: 1rem 2.25rem; font-family: var(--font-body);
+          font-size: 0.78rem; letter-spacing: 0.22em; text-transform: uppercase;
+          font-weight: 700; cursor: pointer; white-space: nowrap;
+          transition: background 0.2s, color 0.2s;
         }
-        .btn-hero-outline:hover { border-color: rgba(240,216,200,0.75); }
+        .btn-hero-ghost:hover { background: #1a2b3c; color: #f8f4ee; }
 
         /* ── SERVICES ── */
         .services-grid { display: grid; grid-template-columns: 1fr 1fr; }
@@ -380,15 +442,7 @@ export default function CustomerHome() {
 
         /* ── MOBILE ── */
         @media (max-width: 768px) {
-          .hero-section {
-            grid-template-columns: 1fr;
-            min-height: auto;
-          }
-          .hero-image-panel {
-            min-height: 280px;
-            order: -1;
-          }
-          .hero-text { padding: 2.5rem 1.5rem; }
+          .hero-section { min-height: 75vh; padding: 3rem 1.5rem; }
           .services-grid { grid-template-columns: 1fr; }
           .service-panel-light { border-right: none; border-bottom: 2px solid #b8c8d8; }
           .steps-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
