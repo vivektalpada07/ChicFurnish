@@ -6,7 +6,6 @@ import { supabase } from '../../lib/supabase';
 export default function CustomerHome() {
   const navigate = useNavigate();
   const [featured, setFeatured] = useState([]);
-  const [heroImg, setHeroImg] = useState(null);
 
   useEffect(() => {
     supabase
@@ -16,12 +15,7 @@ export default function CustomerHome() {
       .order('created_at', { ascending: false })
       .limit(4)
       .then(({ data }) => {
-        const items = data || [];
-        setFeatured(items);
-        const withImg = items.find((i) => Array.isArray(i.images) ? i.images[0] : i.images);
-        if (withImg) {
-          setHeroImg(Array.isArray(withImg.images) ? withImg.images[0] : withImg.images);
-        }
+        setFeatured(data || []);
       });
   }, []);
 
