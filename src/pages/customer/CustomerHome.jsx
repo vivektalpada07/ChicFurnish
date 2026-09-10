@@ -6,7 +6,6 @@ import { supabase } from '../../lib/supabase';
 export default function CustomerHome() {
   const navigate = useNavigate();
   const [featured, setFeatured] = useState([]);
-  const [heroImg, setHeroImg] = useState(null);
 
   useEffect(() => {
     supabase
@@ -16,12 +15,7 @@ export default function CustomerHome() {
       .order('created_at', { ascending: false })
       .limit(4)
       .then(({ data }) => {
-        const items = data || [];
-        setFeatured(items);
-        const withImg = items.find((i) => Array.isArray(i.images) ? i.images[0] : i.images);
-        if (withImg) {
-          setHeroImg(Array.isArray(withImg.images) ? withImg.images[0] : withImg.images);
-        }
+        setFeatured(data || []);
       });
   }, []);
 
@@ -31,66 +25,72 @@ export default function CustomerHome() {
 
       {/* ── HERO ── */}
       <section className="hero-section">
-        {/* Left: text */}
-        <div className="hero-text">
-          <p style={{ fontSize: '0.7rem', letterSpacing: '0.4em', textTransform: 'uppercase', color: '#c9a96e', fontWeight: 700, marginBottom: '1.25rem', fontFamily: 'var(--font-body)' }}>
-            Auckland, New Zealand
-          </p>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(3.2rem, 5.5vw, 6rem)', fontWeight: 600, lineHeight: 1.0, color: '#f8f4ee', marginBottom: '1.5rem' }}>
-            Furniture<br />that <em style={{ color: '#c9a96e' }}>sells<br />homes.</em>
-          </h1>
-          <p style={{ fontSize: '1rem', color: 'rgba(240,216,200,0.8)', lineHeight: 1.8, marginBottom: '2.5rem', maxWidth: 440, fontFamily: 'var(--font-body)' }}>
-            Premium pre-loved furniture for Auckland buyers
-            and Professional home staging that gets properties sold faster.
-          </p>
-          <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', marginBottom: '3rem' }}>
-            <button onClick={() => navigate('/shop')} className="btn-hero-primary">Browse Furniture →</button>
-            <button onClick={() => navigate('/inspiration')} className="btn-hero-outline">View Staging Work</button>
-          </div>
-          {/* Stats inline */}
-          <div style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap', borderTop: '1px solid rgba(201,169,110,0.2)', paddingTop: '2rem' }}>
-            {[ ['48hr', 'Avg Staging Time'], ['100%', 'Auckland-Based']].map(([num, label]) => (
-              <div key={label}>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 600, color: '#c9a96e', lineHeight: 1 }}>{num}</div>
-                <div style={{ fontSize: '0.68rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(240,216,200,0.5)', marginTop: '0.3rem', fontFamily: 'var(--font-body)' }}>{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Illustrated line-art pattern overlay */}
+        <svg className="hero-pattern" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" aria-hidden="true">
+          {/* Sofa outline */}
+          <g stroke="#b5a48a" strokeWidth="1" fill="none" opacity="0.45">
+            <rect x="60" y="310" width="180" height="80" rx="8"/>
+            <rect x="60" y="280" width="180" height="35" rx="6"/>
+            <rect x="55" y="310" width="25" height="65" rx="4"/>
+            <rect x="215" y="310" width="25" height="65" rx="4"/>
+            <rect x="75" y="390" width="15" height="20" rx="3"/>
+            <rect x="205" y="390" width="15" height="20" rx="3"/>
+          </g>
+          {/* Floor lamp */}
+          <g stroke="#b5a48a" strokeWidth="1" fill="none" opacity="0.4">
+            <line x1="620" y1="180" x2="620" y2="420"/>
+            <ellipse cx="620" cy="420" rx="25" ry="6"/>
+            <path d="M590 180 Q620 140 650 180 Z"/>
+            <line x1="605" y1="170" x2="635" y2="170"/>
+          </g>
+          {/* Plant / leaves */}
+          <g stroke="#b5a48a" strokeWidth="1" fill="none" opacity="0.38">
+            <ellipse cx="700" cy="380" rx="12" ry="22" transform="rotate(-25 700 380)"/>
+            <ellipse cx="720" cy="370" rx="12" ry="22" transform="rotate(15 720 370)"/>
+            <ellipse cx="710" cy="360" rx="10" ry="20" transform="rotate(-5 710 360)"/>
+            <line x1="710" y1="400" x2="710" y2="440"/>
+            <ellipse cx="710" cy="445" rx="18" ry="6"/>
+          </g>
+          {/* Side table */}
+          <g stroke="#b5a48a" strokeWidth="1" fill="none" opacity="0.35">
+            <ellipse cx="130" cy="170" rx="40" ry="12"/>
+            <line x1="100" y1="172" x2="95" y2="260"/>
+            <line x1="160" y1="172" x2="165" y2="260"/>
+            <line x1="130" y1="182" x2="130" y2="260"/>
+            <line x1="95" y1="240" x2="165" y2="240"/>
+          </g>
+          {/* Decorative circular lines */}
+          <circle cx="400" cy="300" r="260" stroke="#c9a96e" strokeWidth="0.5" opacity="0.12"/>
+          <circle cx="400" cy="300" r="200" stroke="#c9a96e" strokeWidth="0.5" opacity="0.1"/>
+          {/* Picture frame */}
+          <g stroke="#b5a48a" strokeWidth="1" fill="none" opacity="0.3">
+            <rect x="520" y="100" width="100" height="130" rx="2"/>
+            <rect x="528" y="108" width="84" height="114" rx="1"/>
+            <line x1="528" y1="108" x2="612" y2="222"/>
+            <line x1="612" y1="108" x2="528" y2="222"/>
+          </g>
+          {/* Rug outline */}
+          <g stroke="#b5a48a" strokeWidth="1" fill="none" opacity="0.28">
+            <ellipse cx="250" cy="480" rx="160" ry="55"/>
+            <ellipse cx="250" cy="480" rx="140" ry="45"/>
+            <ellipse cx="250" cy="480" rx="100" ry="30"/>
+          </g>
+        </svg>
 
-        {/* Right: image panel */}
-        <div className="hero-image-panel">
-          {heroImg ? (
-            <img src={heroImg} alt="Featured furniture" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-          ) : (
-            <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1.5rem', padding: '3rem' }}>
-              {/* Decorative room SVG when no image */}
-              <svg viewBox="0 0 300 260" width="80%" style={{ opacity: 0.18 }} fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="20" y="180" width="260" height="4" fill="#f0d8c8"/>
-                <rect x="20" y="40" width="4" height="144" fill="#f0d8c8"/>
-                <rect x="276" y="40" width="4" height="144" fill="#f0d8c8"/>
-                <rect x="24" y="40" width="252" height="4" fill="#f0d8c8"/>
-                <rect x="60" y="140" width="180" height="40" rx="4" fill="#f0d8c8"/>
-                <rect x="80" y="120" width="60" height="20" rx="2" fill="#f0d8c8"/>
-                <rect x="165" y="120" width="60" height="20" rx="2" fill="#f0d8c8"/>
-                <rect x="110" y="80" width="80" height="60" rx="2" fill="#c9a96e" fillOpacity="0.4"/>
-                <rect x="55" y="155" width="14" height="25" fill="#c9a96e" fillOpacity="0.5"/>
-                <rect x="231" y="155" width="14" height="25" fill="#c9a96e" fillOpacity="0.5"/>
-                <circle cx="185" cy="65" r="18" stroke="#f0d8c8" strokeWidth="2"/>
-                <line x1="185" y1="47" x2="185" y2="40" stroke="#f0d8c8" strokeWidth="2"/>
-              </svg>
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', color: 'rgba(240,216,200,0.35)', letterSpacing: '0.1em', textAlign: 'center' }}>
-                Luxury furniture<br />coming soon
-              </p>
-            </div>
-          )}
-          {/* Overlay badge */}
-          {heroImg && (
-            <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.5rem', background: 'rgba(15,30,46,0.85)', backdropFilter: 'blur(8px)', padding: '0.75rem 1.1rem', borderLeft: '3px solid #c9a96e' }}>
-              <p style={{ fontSize: '0.65rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#c9a96e', fontFamily: 'var(--font-body)', fontWeight: 700 }}>Now Available</p>
-              <p style={{ fontSize: '0.88rem', color: '#f8f4ee', fontFamily: 'var(--font-display)', marginTop: '0.2rem' }}>{featured[0]?.name}</p>
-            </div>
-          )}
+        {/* Hero content */}
+        <div className="hero-content">
+          <p className="hero-eyebrow">Luxury Home Staging · Auckland, NZ</p>
+          <h1 className="hero-headline">
+            Spaces that make<br />
+            <em className="hero-headline-em">people feel something</em>
+          </h1>
+          <p className="hero-sub">
+            We transform New Zealand properties into aspirational homes — curated luxury furniture, expert styling, unforgettable first impressions.
+          </p>
+          <div className="hero-ctas">
+            <button onClick={() => navigate('/contact')} className="btn-hero-dark">Book a Staging</button>
+            <button onClick={() => navigate('/shop')} className="btn-hero-ghost">Browse Furniture →</button>
+          </div>
         </div>
       </section>
 
@@ -303,37 +303,81 @@ export default function CustomerHome() {
       <style>{`
         /* ── HERO ── */
         .hero-section {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          min-height: 90vh;
-          background: linear-gradient(135deg, #0f1e2e 0%, #1a3a5c 60%, #2e5f8a 100%);
-        }
-        .hero-text {
-          padding: clamp(3rem, 6vw, 7rem) clamp(1.5rem, 5vw, 5rem);
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-        }
-        .hero-image-panel {
           position: relative;
+          min-height: 88vh;
+          background: #faf7f2;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           overflow: hidden;
-          background: rgba(0,0,0,0.2);
-          min-height: 400px;
+          padding: clamp(4rem, 8vw, 8rem) clamp(1.5rem, 8vw, 6rem);
+          text-align: center;
         }
-        .btn-hero-primary {
-          background: #c04a1a; border: none; color: white;
-          padding: 1rem 2rem; font-family: var(--font-body);
-          font-size: 0.83rem; letter-spacing: 0.18em; text-transform: uppercase;
+        .hero-pattern {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          z-index: 0;
+        }
+        .hero-content {
+          position: relative;
+          z-index: 1;
+          max-width: 780px;
+          margin: 0 auto;
+        }
+        .hero-eyebrow {
+          font-size: 0.68rem;
+          letter-spacing: 0.38em;
+          text-transform: uppercase;
+          color: #9e8b6e;
+          font-weight: 700;
+          margin-bottom: 1.5rem;
+          font-family: var(--font-body);
+        }
+        .hero-headline {
+          font-family: var(--font-display);
+          font-size: clamp(2.8rem, 6vw, 5.2rem);
+          font-weight: 600;
+          line-height: 1.12;
+          color: #1a2b3c;
+          margin-bottom: 1.75rem;
+        }
+        .hero-headline-em {
+          font-style: italic;
+          color: #b07d3a;
+        }
+        .hero-sub {
+          font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+          color: #5a6e7f;
+          line-height: 1.85;
+          max-width: 560px;
+          margin: 0 auto 2.75rem;
+          font-family: var(--font-body);
+        }
+        .hero-ctas {
+          display: flex;
+          gap: 1rem;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        .btn-hero-dark {
+          background: #1a2b3c; border: none; color: #f8f4ee;
+          padding: 1rem 2.25rem; font-family: var(--font-body);
+          font-size: 0.78rem; letter-spacing: 0.22em; text-transform: uppercase;
           font-weight: 700; cursor: pointer; white-space: nowrap;
+          transition: background 0.2s;
         }
-        .btn-hero-primary:hover { background: #a03a10; }
-        .btn-hero-outline {
-          background: transparent; border: 2px solid rgba(240,216,200,0.35);
-          color: #f0d8c8; padding: 1rem 2rem; font-family: var(--font-body);
-          font-size: 0.83rem; letter-spacing: 0.18em; text-transform: uppercase;
-          font-weight: 600; cursor: pointer; white-space: nowrap;
+        .btn-hero-dark:hover { background: #0f1e2e; }
+        .btn-hero-ghost {
+          background: transparent; border: 2px solid #1a2b3c;
+          color: #1a2b3c; padding: 1rem 2.25rem; font-family: var(--font-body);
+          font-size: 0.78rem; letter-spacing: 0.22em; text-transform: uppercase;
+          font-weight: 700; cursor: pointer; white-space: nowrap;
+          transition: background 0.2s, color 0.2s;
         }
-        .btn-hero-outline:hover { border-color: rgba(240,216,200,0.75); }
+        .btn-hero-ghost:hover { background: #1a2b3c; color: #f8f4ee; }
 
         /* ── SERVICES ── */
         .services-grid { display: grid; grid-template-columns: 1fr 1fr; }
@@ -392,15 +436,7 @@ export default function CustomerHome() {
 
         /* ── MOBILE ── */
         @media (max-width: 768px) {
-          .hero-section {
-            grid-template-columns: 1fr;
-            min-height: auto;
-          }
-          .hero-image-panel {
-            min-height: 280px;
-            order: -1;
-          }
-          .hero-text { padding: 2.5rem 1.5rem; }
+          .hero-section { min-height: 75vh; padding: 3rem 1.5rem; }
           .services-grid { grid-template-columns: 1fr; }
           .service-panel-light { border-right: none; border-bottom: 2px solid #b8c8d8; }
           .steps-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }

@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
-const ADMIN_EMAIL = 'vivektalpada769@gmail.com';
+const ADMIN_EMAILS = ['vivektalpada769@gmail.com', 'chicfurnish1@gmail.com'];
 
 function buildUser(sbUser) {
   return {
@@ -11,7 +11,7 @@ function buildUser(sbUser) {
     email: sbUser.email,
     name: sbUser.user_metadata?.name || sbUser.email.split('@')[0],
     phone: sbUser.user_metadata?.phone || '',
-    role: sbUser.email === ADMIN_EMAIL ? 'admin' : 'customer',
+    role: ADMIN_EMAILS.includes(sbUser.email.toLowerCase()) ? 'admin' : 'customer',
   };
 }
 
@@ -51,7 +51,7 @@ export function AuthProvider({ children }) {
       }
       return { error: 'Incorrect email or password. Please try again.' };
     }
-    const role = data.user.email === ADMIN_EMAIL ? 'admin' : 'customer';
+    const role = ADMIN_EMAILS.includes(data.user.email.toLowerCase()) ? 'admin' : 'customer';
     return { success: true, role };
   };
 
