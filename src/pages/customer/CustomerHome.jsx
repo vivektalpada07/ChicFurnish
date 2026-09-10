@@ -63,25 +63,13 @@ export default function CustomerHome() {
           {heroImg ? (
             <img src={heroImg} alt="Featured furniture" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           ) : (
-            <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1.5rem', padding: '3rem' }}>
-              {/* Decorative room SVG when no image */}
-              <svg viewBox="0 0 300 260" width="80%" style={{ opacity: 0.18 }} fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="20" y="180" width="260" height="4" fill="#f0d8c8"/>
-                <rect x="20" y="40" width="4" height="144" fill="#f0d8c8"/>
-                <rect x="276" y="40" width="4" height="144" fill="#f0d8c8"/>
-                <rect x="24" y="40" width="252" height="4" fill="#f0d8c8"/>
-                <rect x="60" y="140" width="180" height="40" rx="4" fill="#f0d8c8"/>
-                <rect x="80" y="120" width="60" height="20" rx="2" fill="#f0d8c8"/>
-                <rect x="165" y="120" width="60" height="20" rx="2" fill="#f0d8c8"/>
-                <rect x="110" y="80" width="80" height="60" rx="2" fill="#c9a96e" fillOpacity="0.4"/>
-                <rect x="55" y="155" width="14" height="25" fill="#c9a96e" fillOpacity="0.5"/>
-                <rect x="231" y="155" width="14" height="25" fill="#c9a96e" fillOpacity="0.5"/>
-                <circle cx="185" cy="65" r="18" stroke="#f0d8c8" strokeWidth="2"/>
-                <line x1="185" y1="47" x2="185" y2="40" stroke="#f0d8c8" strokeWidth="2"/>
-              </svg>
-              <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', color: 'rgba(240,216,200,0.35)', letterSpacing: '0.1em', textAlign: 'center' }}>
-                Luxury furniture<br />coming soon
-              </p>
+            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #0f2034 0%, #1a3a5c 40%, #0f2a40 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', border: '1px solid rgba(201,169,110,0.08)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }} />
+              <div style={{ position: 'absolute', width: 280, height: 280, borderRadius: '50%', border: '1px solid rgba(201,169,110,0.12)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }} />
+              <div style={{ position: 'absolute', width: 160, height: 160, borderRadius: '50%', border: '1px solid rgba(201,169,110,0.18)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }} />
+              <div style={{ width: 40, height: 3, background: '#c9a96e', marginBottom: '1.5rem', position: 'relative', zIndex: 1 }} />
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', color: 'rgba(240,216,200,0.9)', letterSpacing: '0.15em', textAlign: 'center', position: 'relative', zIndex: 1, fontWeight: 400 }}>Luxury Staging</p>
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: '0.72rem', color: 'rgba(201,169,110,0.7)', letterSpacing: '0.3em', textAlign: 'center', position: 'relative', zIndex: 1, marginTop: '0.5rem', textTransform: 'uppercase' }}>Auckland, New Zealand</p>
             </div>
           )}
           {/* Overlay badge */}
