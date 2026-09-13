@@ -31,8 +31,6 @@ export default function CustomerShop() {
   const [viewingModal, setViewingModal] = useState(null);
   const [viewingForm, setViewingForm] = useState({ phone: '', date: '', time: '10:00 AM' });
   const [viewingDone, setViewingDone] = useState(false);
-  const [viewingLoginPrompt, setViewingLoginPrompt] = useState(false);
-  const [pendingViewing, setPendingViewing] = useState(null);
 
   useEffect(() => {
     supabase
@@ -232,23 +230,6 @@ export default function CustomerShop() {
 
 
 
-      {/* ── VIEWING LOGIN PROMPT ── */}
-      {viewingLoginPrompt && (
-        <div className="modal-overlay" onClick={() => setViewingLoginPrompt(false)}>
-          <div className="modal" style={{ maxWidth: 420, textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', color: '#c04a1a', marginBottom: '1rem' }}>◈</div>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 600, color: '#0f1e2e', marginBottom: '0.75rem' }}>Sign in to book a viewing</h2>
-            <p style={{ color: '#2a3d52', fontSize: '0.95rem', lineHeight: 1.8, marginBottom: '2rem', fontWeight: 400 }}>
-              Create a free account or sign in to book a viewing for <strong>{pendingViewing?.name}</strong>.
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <button style={{ background: '#1a3a5c', color: '#f0d8c8', border: 'none', padding: '0.95rem', width: '100%', fontFamily: 'var(--font-body)', fontSize: '0.78rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer' }} onClick={() => { setViewingLoginPrompt(false); navigate('/login'); }}>Sign In</button>
-              <button style={{ background: 'transparent', color: '#c04a1a', border: '2.5px solid #c04a1a', padding: '0.95rem', fontFamily: 'var(--font-body)', fontSize: '0.82rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer' }} onClick={() => { setViewingLoginPrompt(false); navigate('/register'); }}>Create Account</button>
-              <button style={{ background: 'none', border: '1.5px solid #b8c8d8', color: '#4a5e72', padding: '0.5rem', fontFamily: 'var(--font-body)', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }} onClick={() => setViewingLoginPrompt(false)}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── VIEWING BOOKING MODAL ── */}
       {viewingModal && (
