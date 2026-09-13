@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import CustomerNav from '../../components/CustomerNav';
 import { supabase } from '../../lib/supabase';
 import { toast } from '../../components/Toast';
 
+const TURNSTILE_SITE_KEY = '0x4AAAAAAEyQPzJ20FX83uvS';
 const INSTAGRAM_URL = 'https://www.instagram.com/chic_furnish?igsi=MTc0NzVkeHcxbzNzOQ%3D%3D&utm_source=qr';
 const INSTAGRAM_QR = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=${encodeURIComponent(INSTAGRAM_URL)}`;
 
@@ -11,12 +12,36 @@ export default function CustomerContact() {
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef(null);
+  const widgetId = useRef(null);
+
+  const renderTurnstile = useCallback(() => {
+    if (!turnstileRef.current || !window.turnstile) return;
+    if (widgetId.current) return;
+    widgetId.current = window.turnstile.render(turnstileRef.current, {
+      sitekey: TURNSTILE_SITE_KEY,
+      callback: (token) => setTurnstileToken(token),
+      'expired-callback': () => setTurnstileToken(''),
+      theme: 'light',
+    });
+  }, []);
+
+  useEffect(() => {
+    if (window.turnstile) { renderTurnstile(); return; }
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.onload = renderTurnstile;
+    document.head.appendChild(script);
+  }, [renderTurnstile]);
 
   const handleSubmit = async () => {
     setError('');
     if (!form.name.trim()) { setError('Please enter your name.'); return; }
     if (!form.email.trim()) { setError('Please enter your email.'); return; }
     if (!form.message.trim()) { setError('Please enter a message.'); return; }
+    if (!turnstileToken) { setError('Please wait for the security check to complete.'); return; }
 
     setLoading(true);
     const { error: err } = await supabase.from('enquiries').insert({
@@ -29,7 +54,7 @@ export default function CustomerContact() {
     setLoading(false);
 
     if (err) { setError('Something went wrong. Please try again.'); return; }
-    supabase.functions.invoke('notify-admin', { body: { type: 'enquiry', data: form } });
+    supabase.functions.invoke('notify-admin', { body: { type: 'enquiry', data: form, turnstileToken } });
     toast('Message sent! We\'ll respond within 1 business day.');
     setDone(true);
   };
@@ -134,11 +159,12 @@ export default function CustomerContact() {
                 <textarea className="form-textarea" placeholder="Tell us what you're looking for…" rows={5} value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} />
               </div>
 
+              <div ref={turnstileRef} style={{ marginBottom: '1rem' }} />
               <button
                 className="btn btn-dark btn-full"
-                style={{ padding: '1rem', opacity: loading ? 0.7 : 1 }}
+                style={{ padding: '1rem', opacity: (loading || !turnstileToken) ? 0.7 : 1 }}
                 onClick={handleSubmit}
-                disabled={loading}
+                disabled={loading || !turnstileToken}
               >
                 {loading ? 'Sending…' : 'Send Message →'}
               </button>
