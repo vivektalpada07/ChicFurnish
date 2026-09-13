@@ -7,9 +7,11 @@ const corsHeaders = {
 
 const FROM = 'Chic Furnish <noreply@chicfurnish.co.nz>'
 const ADMIN_EMAIL = 'vivektalpada769@gmail.com'
+const ADMIN_EMAILS = ['vivektalpada769@gmail.com', 'chicfurnish1@gmail.com']
 
-async function sendEmail(to: string, subject: string, html: string, replyTo?: string) {
-  const body: Record<string, unknown> = { from: FROM, to: [to], subject, html }
+async function sendEmail(to: string | string[], subject: string, html: string, replyTo?: string) {
+  const toList = Array.isArray(to) ? to : [to]
+  const body: Record<string, unknown> = { from: FROM, to: toList, subject, html }
   if (replyTo) body.reply_to = replyTo
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -70,7 +72,7 @@ serve(async (req) => {
 
     // ── ADMIN NOTIFICATIONS ──────────────────────────────────
     if (type === 'viewing') {
-      await sendEmail(ADMIN_EMAIL, `New Viewing Request — ${data.listing_name}`, emailWrapper(`
+      await sendEmail(ADMIN_EMAILS, `New Viewing Request — ${data.listing_name}`, emailWrapper(`
         <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#c04a1a;font-weight:700;">New Request</p>
         <h1 style="margin:0 0 24px;font-size:26px;color:#0f1e2e;font-weight:300;">Viewing Request</h1>
         <table width="100%" cellpadding="0" cellspacing="0">
@@ -96,7 +98,7 @@ serve(async (req) => {
     }
 
     else if (type === 'staging') {
-      await sendEmail(ADMIN_EMAIL, `New Staging Request — ${data.service}`, emailWrapper(`
+      await sendEmail(ADMIN_EMAILS, `New Staging Request — ${data.service}`, emailWrapper(`
         <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#c04a1a;font-weight:700;">New Request</p>
         <h1 style="margin:0 0 24px;font-size:26px;color:#0f1e2e;font-weight:300;">Staging Booking</h1>
         <table width="100%" cellpadding="0" cellspacing="0">
@@ -131,7 +133,7 @@ serve(async (req) => {
       const priceTag = data.listing_price ? `$${Number(data.listing_price).toLocaleString()} NZD` : null
 
       // 1. Notify admin — attractive email with Reply button, reply-to set to customer
-      await sendEmail(ADMIN_EMAIL, `💬 New Enquiry: ${itemName} — ${customerName}`, emailWrapper(`
+      await sendEmail(ADMIN_EMAILS, `💬 New Enquiry: ${itemName} — ${customerName}`, emailWrapper(`
         <!-- Alert banner -->
         <div style="background:#c04a1a;margin:-40px -48px 32px;padding:16px 48px;display:flex;align-items:center;gap:12px;">
           <span style="font-size:22px;">💬</span>
@@ -314,7 +316,7 @@ serve(async (req) => {
       const paymentLabel = data.payment_method === 'bank' ? 'Bank Transfer — details to follow via email' : data.payment_method === 'cash' ? 'Cash on pickup / delivery' : 'Card — our team will contact you'
 
       // 1. Admin notification
-      await sendEmail(ADMIN_EMAIL, `🛒 New Order ${data.id} — ${data.customer_name}`, emailWrapper(`
+      await sendEmail(ADMIN_EMAILS, `🛒 New Order ${data.id} — ${data.customer_name}`, emailWrapper(`
         <div style="background:#1a3a5c;margin:-40px -48px 32px;padding:20px 48px;display:flex;align-items:center;gap:16px;">
           <span style="font-size:28px;">🛒</span>
           <div>
