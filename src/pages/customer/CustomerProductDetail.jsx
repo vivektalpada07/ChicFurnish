@@ -114,7 +114,7 @@ export default function CustomerProductDetail() {
       status: 'open',
     };
     await supabase.from('item_enquiries').insert(record);
-    supabase.functions.invoke('notify-admin', { body: { type: 'enquiry', data: record } });
+    supabase.functions.invoke('notify-admin', { body: { type: 'enquiry', data: record, turnstileToken: user ? null : turnstileToken } });
     setEnquiryDone(true);
     setEnquirySending(false);
     toast('Question sent! We\'ll reply within 24 hours.');

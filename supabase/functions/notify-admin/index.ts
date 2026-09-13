@@ -6,8 +6,21 @@ const corsHeaders = {
 }
 
 const FROM = 'Chic Furnish <noreply@chicfurnish.co.nz>'
-const ADMIN_EMAIL = 'vivektalpada769@gmail.com'
 const ADMIN_EMAILS = ['vivektalpada769@gmail.com', 'chicfurnish1@gmail.com']
+
+async function verifyTurnstile(token: string): Promise<boolean> {
+  if (!token) return false
+  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      secret: Deno.env.get('TURNSTILE_SECRET_KEY'),
+      response: token,
+    }),
+  })
+  const data = await res.json()
+  return data.success === true
+}
 
 async function sendEmail(to: string | string[], subject: string, html: string, replyTo?: string) {
   const toList = Array.isArray(to) ? to : [to]
@@ -68,7 +81,19 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const { type, data } = await req.json()
+    const { type, data, turnstileToken } = await req.json()
+
+    // Verify Turnstile for guest enquiries (no auth header = guest)
+    const authHeader = req.headers.get('authorization')
+    const isGuest = !authHeader || authHeader === `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`
+    if (type === 'enquiry' && isGuest) {
+      const valid = await verifyTurnstile(turnstileToken)
+      if (!valid) {
+        return new Response(JSON.stringify({ error: 'Bot verification failed' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+    }
 
     // ── ADMIN NOTIFICATIONS ──────────────────────────────────
     if (type === 'viewing') {
