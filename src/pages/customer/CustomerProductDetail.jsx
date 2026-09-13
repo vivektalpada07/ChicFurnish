@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import CustomerNav from '../../components/CustomerNav';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { supabase } from '../../lib/supabase';
 import { toast } from '../../components/Toast';
+
+const TURNSTILE_SITE_KEY = '0x4AAAAAAEyQPzJ20FX83uvS';
 
 const TIMES = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'];
 
@@ -26,6 +28,9 @@ export default function CustomerProductDetail() {
   const [enquiryEmail, setEnquiryEmail] = useState('');
   const [enquirySending, setEnquirySending] = useState(false);
   const [enquiryDone, setEnquiryDone] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef(null);
+  const turnstileWidgetId = useRef(null);
 
   const [slideIndex, setSlideIndex] = useState(0);
   const sliderRef = useRef(null);
@@ -60,16 +65,43 @@ export default function CustomerProductDetail() {
     setWishlistLoading(false);
   };
 
+  const renderTurnstile = useCallback(() => {
+    if (user) return; // only for guests
+    if (!turnstileRef.current || !window.turnstile) return;
+    if (turnstileWidgetId.current) {
+      window.turnstile.reset(turnstileWidgetId.current);
+      return;
+    }
+    turnstileWidgetId.current = window.turnstile.render(turnstileRef.current, {
+      sitekey: TURNSTILE_SITE_KEY,
+      callback: (token) => setTurnstileToken(token),
+      'expired-callback': () => setTurnstileToken(''),
+      theme: 'light',
+    });
+  }, [user]);
+
+  useEffect(() => {
+    if (!enquiryOpen || user) return;
+    if (window.turnstile) { renderTurnstile(); return; }
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.onload = renderTurnstile;
+    document.head.appendChild(script);
+  }, [enquiryOpen, user, renderTurnstile]);
+
   const openEnquiry = () => {
     setEnquiryMsg('');
     setEnquiryName(user?.name || '');
     setEnquiryEmail(user?.email || '');
+    setTurnstileToken('');
     setEnquiryDone(false);
     setEnquiryOpen(true);
   };
 
   const submitEnquiry = async () => {
     if (!enquiryMsg.trim() || !enquiryName.trim() || !enquiryEmail.trim()) return;
+    if (!user && !turnstileToken) { toast('Please complete the security check.'); return; }
     setEnquirySending(true);
     const record = {
       id: `ENQ-${Date.now()}`,
@@ -376,9 +408,10 @@ export default function CustomerProductDetail() {
                   <label className="form-label">Your Question *</label>
                   <textarea className="form-textarea" style={{ minHeight: 120 }} value={enquiryMsg} onChange={(e) => setEnquiryMsg(e.target.value)} placeholder="Ask about dimensions, condition, delivery, availability…" />
                 </div>
+                {!user && <div ref={turnstileRef} style={{ marginBottom: '1rem' }} />}
                 <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
                   <button onClick={() => setEnquiryOpen(false)} style={{ background: 'none', border: '2px solid #b8c8d8', color: '#4a5e72', padding: '0.7rem 1.3rem', fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Cancel</button>
-                  <button onClick={submitEnquiry} disabled={enquirySending || !enquiryMsg.trim() || !enquiryName.trim() || !enquiryEmail.trim()} style={{ background: (enquiryMsg.trim() && enquiryName.trim() && enquiryEmail.trim()) ? '#1a3a5c' : '#b8c8d8', color: '#f0d8c8', border: 'none', padding: '0.7rem 1.5rem', fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.15em', textTransform: 'uppercase', opacity: enquirySending ? 0.7 : 1 }}>
+                  <button onClick={submitEnquiry} disabled={enquirySending || !enquiryMsg.trim() || !enquiryName.trim() || !enquiryEmail.trim() || (!user && !turnstileToken)} style={{ background: (enquiryMsg.trim() && enquiryName.trim() && enquiryEmail.trim() && (user || turnstileToken)) ? '#1a3a5c' : '#b8c8d8', color: '#f0d8c8', border: 'none', padding: '0.7rem 1.5rem', fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.15em', textTransform: 'uppercase', opacity: enquirySending ? 0.7 : 1 }}>
                     {enquirySending ? 'Sending…' : 'Send Question →'}
                   </button>
                 </div>
