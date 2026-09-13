@@ -22,6 +22,8 @@ export default function CustomerProductDetail() {
 
   const [enquiryOpen, setEnquiryOpen] = useState(false);
   const [enquiryMsg, setEnquiryMsg] = useState('');
+  const [enquiryName, setEnquiryName] = useState('');
+  const [enquiryEmail, setEnquiryEmail] = useState('');
   const [enquirySending, setEnquirySending] = useState(false);
   const [enquiryDone, setEnquiryDone] = useState(false);
 
@@ -59,22 +61,23 @@ export default function CustomerProductDetail() {
   };
 
   const openEnquiry = () => {
-    if (!user) { navigate('/login'); return; }
     setEnquiryMsg('');
+    setEnquiryName(user?.name || '');
+    setEnquiryEmail(user?.email || '');
     setEnquiryDone(false);
     setEnquiryOpen(true);
   };
 
   const submitEnquiry = async () => {
-    if (!enquiryMsg.trim()) return;
+    if (!enquiryMsg.trim() || !enquiryName.trim() || !enquiryEmail.trim()) return;
     setEnquirySending(true);
     const record = {
       id: `ENQ-${Date.now()}`,
       listing_id: item.id,
       listing_name: item.name,
       listing_price: item.price,
-      customer_name: user.name,
-      customer_email: user.email,
+      customer_name: enquiryName.trim(),
+      customer_email: enquiryEmail.trim().toLowerCase(),
       message: enquiryMsg.trim(),
       status: 'open',
     };
@@ -348,7 +351,7 @@ export default function CustomerProductDetail() {
               <div style={{ textAlign: 'center', padding: '2rem 0' }}>
                 <div style={{ fontSize: '3rem', color: '#c04a1a', marginBottom: '1rem' }}>✉</div>
                 <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 600, color: '#0f1e2e', marginBottom: '0.75rem' }}>Question Sent!</h2>
-                <p style={{ color: '#2a3d52', fontSize: '0.95rem', lineHeight: 1.9 }}>We'll reply within 24 hours to <strong>{user?.email}</strong>.</p>
+                <p style={{ color: '#2a3d52', fontSize: '0.95rem', lineHeight: 1.9 }}>We'll reply within 24 hours to <strong>{enquiryEmail}</strong>.</p>
               </div>
             ) : (
               <>
@@ -357,13 +360,25 @@ export default function CustomerProductDetail() {
                   <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', fontWeight: 600, color: '#0f1e2e' }}>{item.name}</div>
                   <div style={{ fontSize: '0.85rem', color: '#4a5e72', marginTop: '0.2rem' }}>${Number(item.price).toLocaleString()} NZD · {item.condition}</div>
                 </div>
+                {!user && (
+                  <div className="grid-2" style={{ marginBottom: '0.5rem' }}>
+                    <div className="form-group">
+                      <label className="form-label">Your Name *</label>
+                      <input className="form-input" value={enquiryName} onChange={(e) => setEnquiryName(e.target.value)} placeholder="Jane Smith" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Your Email *</label>
+                      <input className="form-input" type="email" value={enquiryEmail} onChange={(e) => setEnquiryEmail(e.target.value)} placeholder="you@email.com" />
+                    </div>
+                  </div>
+                )}
                 <div className="form-group">
                   <label className="form-label">Your Question *</label>
                   <textarea className="form-textarea" style={{ minHeight: 120 }} value={enquiryMsg} onChange={(e) => setEnquiryMsg(e.target.value)} placeholder="Ask about dimensions, condition, delivery, availability…" />
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
                   <button onClick={() => setEnquiryOpen(false)} style={{ background: 'none', border: '2px solid #b8c8d8', color: '#4a5e72', padding: '0.7rem 1.3rem', fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Cancel</button>
-                  <button onClick={submitEnquiry} disabled={enquirySending || !enquiryMsg.trim()} style={{ background: enquiryMsg.trim() ? '#1a3a5c' : '#b8c8d8', color: '#f0d8c8', border: 'none', padding: '0.7rem 1.5rem', fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 700, cursor: enquiryMsg.trim() ? 'pointer' : 'not-allowed', letterSpacing: '0.15em', textTransform: 'uppercase', opacity: enquirySending ? 0.7 : 1 }}>
+                  <button onClick={submitEnquiry} disabled={enquirySending || !enquiryMsg.trim() || !enquiryName.trim() || !enquiryEmail.trim()} style={{ background: (enquiryMsg.trim() && enquiryName.trim() && enquiryEmail.trim()) ? '#1a3a5c' : '#b8c8d8', color: '#f0d8c8', border: 'none', padding: '0.7rem 1.5rem', fontFamily: 'var(--font-body)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.15em', textTransform: 'uppercase', opacity: enquirySending ? 0.7 : 1 }}>
                     {enquirySending ? 'Sending…' : 'Send Question →'}
                   </button>
                 </div>
