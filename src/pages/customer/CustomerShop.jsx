@@ -55,20 +55,19 @@ export default function CustomerShop() {
     });
 
   const openViewing = (item) => {
-    if (!user) { setPendingViewing(item); setViewingLoginPrompt(true); return; }
     setViewingModal(item);
-    setViewingForm({ phone: user.phone || '', date: '', time: '10:00 AM' });
+    setViewingForm({ name: user?.name || '', email: user?.email || '', phone: user?.phone || '', date: '', time: '10:00 AM' });
     setViewingDone(false);
   };
 
   const submitViewing = async () => {
-    if (!viewingForm.date) return;
+    if (!viewingForm.date || !viewingForm.name || !viewingForm.email) return;
     const bookingData = {
       id: `VB-${Date.now()}`,
       listing_id: viewingModal.id,
       listing_name: viewingModal.name,
-      customer_name: user.name,
-      customer_email: user.email,
+      customer_name: viewingForm.name,
+      customer_email: viewingForm.email,
       customer_phone: viewingForm.phone,
       date: viewingForm.date,
       time: viewingForm.time,
@@ -269,8 +268,8 @@ export default function CustomerShop() {
                   <div style={{ fontSize: '0.85rem', color: '#2a3d52', fontWeight: 500 }}>${Number(viewingModal.price).toLocaleString()} · {viewingModal.condition}</div>
                 </div>
                 <div className="grid-2">
-                  <div className="form-group"><label className="form-label">Name</label><input className="form-input" value={user.name} disabled style={{ opacity: 0.7 }} /></div>
-                  <div className="form-group"><label className="form-label">Email</label><input className="form-input" value={user.email} disabled style={{ opacity: 0.7 }} /></div>
+                  <div className="form-group"><label className="form-label">Name *</label><input className="form-input" value={viewingForm.name} onChange={(e) => setViewingForm({ ...viewingForm, name: e.target.value })} placeholder="Your name" disabled={!!user} style={{ opacity: user ? 0.7 : 1 }} /></div>
+                  <div className="form-group"><label className="form-label">Email *</label><input className="form-input" type="email" value={viewingForm.email} onChange={(e) => setViewingForm({ ...viewingForm, email: e.target.value })} placeholder="you@email.com" disabled={!!user} style={{ opacity: user ? 0.7 : 1 }} /></div>
                 </div>
                 <div className="grid-2">
                   <div className="form-group">

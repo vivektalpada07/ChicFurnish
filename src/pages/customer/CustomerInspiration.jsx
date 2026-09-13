@@ -129,8 +129,7 @@ export default function CustomerInspiration() {
   };
 
   const openStaging = () => {
-    if (!user) { setRequireLogin(true); return; }
-    setForm({ ...EMPTY_FORM, name: user.name, email: user.email, phone: user.phone || '' });
+    setForm({ ...EMPTY_FORM, name: user?.name || '', email: user?.email || '', phone: user?.phone || '' });
     setStagingModal(true);
   };
 
