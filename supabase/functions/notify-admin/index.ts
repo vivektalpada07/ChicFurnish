@@ -6,7 +6,7 @@ const corsHeaders = {
 }
 
 const FROM = 'Chic Furnish <noreply@chicfurnish.co.nz>'
-const ADMIN_EMAILS = ['vivektalpada769@gmail.com', 'chicfurnish1@gmail.com']
+const ADMIN_EMAILS = ['chicfurnish1@gmail.com']
 
 async function verifyTurnstile(token: string): Promise<boolean> {
   if (!token) return false

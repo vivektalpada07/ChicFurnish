@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
-const ADMIN_EMAILS = ['vivektalpada769@gmail.com', 'chicfurnish1@gmail.com'];
+const ADMIN_EMAILS = ['chicfurnish1@gmail.com'];
 
 function buildUser(sbUser) {
   return {
