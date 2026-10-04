@@ -475,10 +475,10 @@ export default function CustomerInspiration() {
             </thead>
             <tbody>
               {[
-                ['1–2 Bedroom', '$1,499'],
-                ['3 Bedroom', '$2,050'],
-                ['4 Bedroom', '$2,500'],
-                ['5+ Bedroom', '$2,900'],
+                ['1–2 Bedroom', '$1,399'],
+                ['3 Bedroom', '$1,999'],
+                ['4 Bedroom', '$2,300'],
+                ['5+ Bedroom', '$2,700'],
               ].map(([type, price], i) => (
                 <tr key={type} style={{ borderTop: '1px solid #ede7dc', background: i % 2 === 0 ? 'white' : '#f8f4ee' }}>
                   <td style={{ padding: '1rem 1.5rem', color: '#0f1e2e', fontSize: '0.92rem', fontWeight: 500 }}>{type}</td>
