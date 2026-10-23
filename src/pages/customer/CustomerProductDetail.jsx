@@ -19,8 +19,6 @@ export default function CustomerProductDetail() {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lightbox, setLightbox] = useState(false);
-  const [wishlisted, setWishlisted] = useState(false);
-  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   const [enquiryOpen, setEnquiryOpen] = useState(false);
   const [enquiryMsg, setEnquiryMsg] = useState('');
@@ -34,6 +32,7 @@ export default function CustomerProductDetail() {
 
   const [slideIndex, setSlideIndex] = useState(0);
   const sliderRef = useRef(null);
+  const lightboxRef = useRef(null);
 
   const [viewingOpen, setViewingOpen] = useState(false);
   const [viewingForm, setViewingForm] = useState({ phone: '', date: '', time: '10:00 AM' });
@@ -44,26 +43,16 @@ export default function CustomerProductDetail() {
       .then(({ data }) => { setItem(data); setLoading(false); });
   }, [id]);
 
+  // When the zoom popup opens, jump straight to the photo that was tapped
   useEffect(() => {
-    if (!user || !id) return;
-    supabase.from('wishlists').select('id').eq('user_id', user.id).eq('listing_id', id).maybeSingle()
-      .then(({ data }) => setWishlisted(!!data));
-  }, [user, id]);
-
-  const toggleWishlist = async () => {
-    if (!user) { navigate('/login'); return; }
-    setWishlistLoading(true);
-    if (wishlisted) {
-      await supabase.from('wishlists').delete().eq('user_id', user.id).eq('listing_id', id);
-      setWishlisted(false);
-      toast('Removed from wishlist');
-    } else {
-      await supabase.from('wishlists').insert({ user_id: user.id, listing_id: id });
-      setWishlisted(true);
-      toast('Added to wishlist ♥');
+    if (lightbox && lightboxRef.current) {
+      const el = lightboxRef.current;
+      el.style.scrollBehavior = 'auto';
+      el.scrollLeft = slideIndex * el.offsetWidth;
+      el.style.scrollBehavior = 'smooth';
     }
-    setWishlistLoading(false);
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightbox]);
 
   const renderTurnstile = useCallback(() => {
     if (user) return; // only for guests
@@ -166,6 +155,13 @@ export default function CustomerProductDetail() {
 
   const allPhotos = [item.photo_url, ...(item.photos || [])].filter(Boolean);
 
+  // Move the zoom popup slider (and keep the main slider in sync)
+  const goToLightboxSlide = (i) => {
+    setSlideIndex(i);
+    lightboxRef.current?.scrollTo({ left: i * lightboxRef.current.offsetWidth, behavior: 'smooth' });
+    sliderRef.current?.scrollTo({ left: i * sliderRef.current.offsetWidth, behavior: 'auto' });
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: '#f8f4ee' }}>
       <CustomerNav />
@@ -180,29 +176,29 @@ export default function CustomerProductDetail() {
           </div>
 
           {/* Swipeable image strip */}
-          <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ flex: 1, position: 'relative', overflow: 'hidden', minHeight: 0 }}>
             <div
-              style={{ display: 'flex', height: '100%', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}
-              ref={(el) => { if (el) el.scrollLeft = slideIndex * el.offsetWidth; }}
+              ref={lightboxRef}
+              style={{ display: 'flex', height: '100%', width: '100%', overflowX: 'auto', scrollSnapType: 'x mandatory', scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}
               onScroll={(e) => {
                 const idx = Math.round(e.target.scrollLeft / e.target.offsetWidth);
                 if (idx !== slideIndex) { setSlideIndex(idx); }
               }}
             >
               {allPhotos.map((photo, i) => (
-                <div key={i} style={{ minWidth: '100%', height: '100%', scrollSnapAlign: 'start', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem' }}>
-                  <img src={photo} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', userSelect: 'none' }} />
+                <div key={i} style={{ width: '100%', minWidth: '100%', height: '100%', scrollSnapAlign: 'start', flexShrink: 0, padding: '0.5rem', boxSizing: 'border-box' }}>
+                  <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', userSelect: 'none' }} />
                 </div>
               ))}
             </div>
 
             {/* Prev / Next arrows */}
             {slideIndex > 0 && (
-              <button onClick={() => { const i = slideIndex - 1; setSlideIndex(i); sliderRef.current?.scrollTo({ left: i * sliderRef.current.offsetWidth, behavior: 'smooth' }); }}
+              <button onClick={() => goToLightboxSlide(slideIndex - 1)}
                 style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
             )}
             {slideIndex < allPhotos.length - 1 && (
-              <button onClick={() => { const i = slideIndex + 1; setSlideIndex(i); sliderRef.current?.scrollTo({ left: i * sliderRef.current.offsetWidth, behavior: 'smooth' }); }}
+              <button onClick={() => goToLightboxSlide(slideIndex + 1)}
                 style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
             )}
           </div>
@@ -211,7 +207,7 @@ export default function CustomerProductDetail() {
           {allPhotos.length > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', gap: '0.4rem', padding: '0.75rem', flexShrink: 0 }}>
               {allPhotos.map((_, i) => (
-                <div key={i} style={{ width: slideIndex === i ? 20 : 8, height: 8, borderRadius: 4, background: slideIndex === i ? 'white' : 'rgba(255,255,255,0.35)', transition: 'all 0.2s', cursor: 'pointer' }} onClick={() => { setSlideIndex(i); }} />
+                <div key={i} style={{ width: slideIndex === i ? 20 : 8, height: 8, borderRadius: 4, background: slideIndex === i ? 'white' : 'rgba(255,255,255,0.35)', transition: 'all 0.2s', cursor: 'pointer' }} onClick={() => goToLightboxSlide(i)} />
               ))}
             </div>
           )}
@@ -349,15 +345,6 @@ export default function CustomerProductDetail() {
             )}
             <button className="pdp-btn-secondary" onClick={openViewing}>
               Book a Viewing
-            </button>
-          </div>
-          <div style={{ marginTop: '0.75rem' }}>
-            <button
-              onClick={toggleWishlist}
-              disabled={wishlistLoading}
-              style={{ background: wishlisted ? '#fdf0eb' : 'none', border: '1.5px solid ' + (wishlisted ? '#c04a1a' : '#b8c8d8'), color: wishlisted ? '#c04a1a' : '#1a3a5c', padding: '0.65rem 1.2rem', fontFamily: 'var(--font-body)', fontSize: '0.78rem', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer', width: '100%', transition: 'all 0.2s' }}
-            >
-              {wishlisted ? '♥ Saved to Wishlist' : '♡ Save to Wishlist'}
             </button>
           </div>
           <div style={{ marginTop: '0.75rem' }}>
