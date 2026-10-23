@@ -605,7 +605,7 @@ html { scroll-behavior: smooth; }
     gap: 0 !important;
   }
   .pdp-gallery { position: static; }
-  .pdp-main-img { aspect-ratio: 1 / 1; border-radius: 0; }
+ .pdp-main-img { aspect-ratio: 4 / 3; border-radius: 0; }
   .pdp-thumbs { padding: 0.6rem 1rem; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .pdp-thumb { width: 64px; height: 52px; }
   .pdp-info { padding: 1.25rem 1rem 1rem !important; }
