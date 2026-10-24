@@ -267,7 +267,7 @@ export default function CustomerProductDetail() {
                 <span style={{ fontFamily: 'var(--font-display)', color: 'rgba(26,58,92,0.3)', fontSize: '1.2rem', letterSpacing: '0.3em' }}>{item.category?.toUpperCase()}</span>
               </div>
             )}
-            <span style={{ position: 'absolute', top: '0.7rem', left: '0.7rem', background: item.condition === 'New' ? '#1a3a5c' : '#c04a1a', color: 'white', fontSize: '0.65rem', letterSpacing: '0.18em', textTransform: 'uppercase', padding: '0.28rem 0.75rem', fontWeight: 700 }}>{item.condition}</span>
+
           </div>
 
           {/* Thumbnail row — desktop only */}
