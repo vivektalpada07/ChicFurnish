@@ -308,6 +308,7 @@ html { scroll-behavior: smooth; }
 }
 
 .product-card-badge {
+  display: none;
   position: absolute;
   top: 0.6rem;
   left: 0.6rem;
