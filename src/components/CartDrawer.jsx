@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -47,6 +47,39 @@ export default function CartDrawer() {
   });
   const [checkoutError, setCheckoutError] = useState('');
   const [placing, setPlacing] = useState(false);
+
+  // When the cart opens, drop any items that have been sold or removed since they were added
+  useEffect(() => {
+    if (!cartOpen || cart.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('id, status, quantity')
+        .in('id', cart.map((c) => c.id));
+      if (cancelled || error || !data) return;
+
+      const stillAvailable = new Set(
+        data
+          .filter((l) =>
+            String(l.status || '').toLowerCase() !== 'sold' &&
+            !(l.quantity != null && Number(l.quantity) <= 0)
+          )
+          .map((l) => l.id)
+      );
+      const gone = cart.filter((c) => !stillAvailable.has(c.id));
+      if (gone.length === 0) return;
+
+      gone.forEach((c) => removeFromCart(c.id));
+      setCheckoutError(
+        gone.length === 1
+          ? `Sorry, "${gone[0].name}" has been sold and was removed from your cart.`
+          : `Sorry, ${gone.length} items in your cart have been sold and were removed.`
+      );
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartOpen]);
 
   if (!cartOpen) return null;
 
