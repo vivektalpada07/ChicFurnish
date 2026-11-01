@@ -155,6 +155,9 @@ export default function CustomerProductDetail() {
 
   const allPhotos = [item.photo_url, ...(item.photos || [])].filter(Boolean);
 
+  // Sold out = marked sold, or quantity is 0
+  const soldOut = item.status === 'sold' || (item.stock != null && Number(item.stock) <= 0);
+
   // Move the zoom popup slider (and keep the main slider in sync)
   const goToLightboxSlide = (i) => {
     setSlideIndex(i);
@@ -242,7 +245,7 @@ export default function CustomerProductDetail() {
                 >
                   {allPhotos.map((photo, i) => (
                     <div key={i} style={{ minWidth: '100%', height: '100%', scrollSnapAlign: 'start', flexShrink: 0, cursor: 'zoom-in' }} onClick={() => setLightbox(true)}>
-                      <img src={photo} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      <img src={photo} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: soldOut ? 0.6 : 1 }} />
                     </div>
                   ))}
                 </div>
@@ -268,6 +271,10 @@ export default function CustomerProductDetail() {
               </div>
             )}
 
+            {/* Sold Out ribbon */}
+            {soldOut && (
+              <span style={{ position: 'absolute', top: '0.7rem', left: '0.7rem', background: '#7a1a00', color: 'white', fontSize: '0.7rem', letterSpacing: '0.18em', textTransform: 'uppercase', padding: '0.3rem 0.8rem', fontWeight: 700, pointerEvents: 'none' }}>Sold Out</span>
+            )}
           </div>
 
           {/* Thumbnail row — desktop only */}
@@ -298,9 +305,15 @@ export default function CustomerProductDetail() {
 
           {/* Price */}
           <div className="pdp-price-row">
-            <span className="pdp-price">${Number(item.price).toLocaleString()}</span>
+            <span className="pdp-price" style={{ textDecoration: soldOut ? 'line-through' : 'none', opacity: soldOut ? 0.6 : 1 }}>${Number(item.price).toLocaleString()}</span>
             <span style={{ fontSize: '0.88rem', color: '#4a5e72', fontWeight: 700 }}>NZD</span>
           </div>
+
+          {soldOut && (
+            <div style={{ background: '#fde8e8', border: '1.5px solid #c04a1a', color: '#7a1a00', padding: '0.75rem 1rem', marginTop: '1rem', fontSize: '0.88rem', fontWeight: 600, lineHeight: 1.6 }}>
+              This item has been sold. Have a question about something similar? Use “Ask a Question” below.
+            </div>
+          )}
 
           <div style={{ height: '1px', background: '#dde3e8', margin: '1.25rem 0' }} />
 
@@ -319,33 +332,35 @@ export default function CustomerProductDetail() {
               ['Condition', item.condition],
               ['Category', item.category],
               ['Location', 'Auckland, New Zealand'],
-              ['Availability', item.status === 'available' ? 'In Stock' : 'Sold'],
+              ['Availability', soldOut ? 'Sold' : 'In Stock'],
             ].map(([k, v]) => (
               <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0', borderBottom: '1px solid #d6e8f5', fontSize: '0.88rem' }}>
                 <span style={{ color: '#4a5e72', fontWeight: 600 }}>{k}</span>
-                <span style={{ color: '#0f1e2e', fontWeight: 700 }}>{v}</span>
+                <span style={{ color: k === 'Availability' && soldOut ? '#7a1a00' : '#0f1e2e', fontWeight: 700 }}>{v}</span>
               </div>
             ))}
           </div>
 
           {/* CTA buttons */}
           <div className="pdp-actions">
-            {item.stock === 0 ? (
+            {soldOut ? (
               <button className="pdp-btn-primary" disabled style={{ background: '#7a1a00', opacity: 0.7, cursor: 'not-allowed' }}>
                 Sold Out
               </button>
             ) : (
-              <button
-                className="pdp-btn-primary"
-                style={{ background: cart.find((c) => c.id === item.id) ? '#2e6b42' : undefined }}
-                onClick={() => { addToCart(item); openCart(); }}
-              >
-                {cart.find((c) => c.id === item.id) ? '✓ Added to Cart' : '+ Add to Cart'}
-              </button>
+              <>
+                <button
+                  className="pdp-btn-primary"
+                  style={{ background: cart.find((c) => c.id === item.id) ? '#2e6b42' : undefined }}
+                  onClick={() => { addToCart(item); openCart(); }}
+                >
+                  {cart.find((c) => c.id === item.id) ? '✓ Added to Cart' : '+ Add to Cart'}
+                </button>
+                <button className="pdp-btn-secondary" onClick={openViewing}>
+                  Book a Viewing
+                </button>
+              </>
             )}
-            <button className="pdp-btn-secondary" onClick={openViewing}>
-              Book a Viewing
-            </button>
           </div>
           <div style={{ marginTop: '0.75rem' }}>
             <button onClick={openEnquiry} style={{ background: 'none', border: '1.5px solid #b8c8d8', color: '#1a3a5c', padding: '0.65rem 1.2rem', fontFamily: 'var(--font-body)', fontSize: '0.78rem', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600, cursor: 'pointer', width: '100%' }}>

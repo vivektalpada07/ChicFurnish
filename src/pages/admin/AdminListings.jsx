@@ -6,6 +6,9 @@ const CATEGORIES = ['All', 'sofa', 'table', 'rug', 'cupboard'];
 const EMPTY_FORM = { name: '', category: 'sofa', price: '', condition: 'New', status: 'available', description: '', stock: 1 };
 const BUCKET = 'listing-photos';
 
+// An item counts as sold when it is marked sold or its quantity is 0
+const isSoldOut = (item) => item.status === 'sold' || (item.stock != null && Number(item.stock) <= 0);
+
 export default function AdminListings() {
   const [items, setItems] = useState([]);
   const [filter, setFilter] = useState('All');
@@ -44,7 +47,7 @@ export default function AdminListings() {
 
   const openEdit = (item) => {
     setEditItem(item);
-    setForm({ name: item.name, category: item.category, price: item.price, condition: item.condition, status: item.status, description: item.description || '', stock: item.stock ?? 1 });
+    setForm({ name: item.name, category: item.category, price: item.price, condition: item.condition, status: isSoldOut(item) ? 'sold' : item.status, description: item.description || '', stock: item.stock ?? 1 });
     setPhotoFile(null);
     setPhotoPreview(item.photo_url || null);
     setAdditionalPhotos((item.photos || []).map((url) => ({ file: null, preview: url, existingUrl: url })));
@@ -74,6 +77,25 @@ export default function AdminListings() {
     return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
   };
 
+  // Changing the status also updates the quantity, so the two always agree
+  const handleStatusChange = (status) => {
+    setForm((prev) => ({
+      ...prev,
+      status,
+      stock: status === 'sold' ? 0 : (Number(prev.stock) > 0 ? prev.stock : 1),
+    }));
+  };
+
+  // Changing the quantity also updates the status
+  const handleStockChange = (value) => {
+    setForm((prev) => {
+      const qty = Number(value);
+      if (value !== '' && qty <= 0) return { ...prev, stock: value, status: 'sold' };
+      if (value !== '' && qty > 0 && prev.status === 'sold') return { ...prev, stock: value, status: 'available' };
+      return { ...prev, stock: value };
+    });
+  };
+
   const handleSave = async () => {
     if (!form.name.trim() || !form.price) return;
     setSaving(true);
@@ -96,14 +118,23 @@ export default function AdminListings() {
       }
     }
 
+    // Keep status and quantity consistent
+    let status = form.status;
+    let stock = Number(form.stock);
+    if (status === 'available' && stock <= 0) {
+      if (editItem && isSoldOut(editItem)) stock = 1;   // re-listing a sold item
+      else status = 'sold';                              // quantity 0 means sold
+    }
+    if (status === 'sold') stock = 0;
+
     const payload = {
       name: form.name.trim(),
       category: form.category,
       price: Number(form.price),
       condition: form.condition,
-      status: form.status,
+      status,
       description: form.description,
-      stock: Number(form.stock),
+      stock,
       photo_url,
       photos: uploadedAdditional,
     };
@@ -163,6 +194,7 @@ export default function AdminListings() {
               <tbody>
                 {filtered.map((item) => {
                   const allPhotos = [item.photo_url, ...(item.photos || [])].filter(Boolean);
+                  const sold = isSoldOut(item);
                   return (
                     <tr key={item.id}>
                       <td style={{ width: 100 }}>
@@ -183,7 +215,10 @@ export default function AdminListings() {
                       <td style={{ textTransform: 'capitalize' }}>{item.category}</td>
                       <td style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', color: 'var(--rust)' }}>${Number(item.price).toLocaleString()}</td>
                       <td><span className={`badge ${item.condition === 'New' ? 'badge-confirmed' : 'badge-pending'}`}>{item.condition}</span></td>
-                      <td><span className={`badge badge-${item.status}`}>{item.status}</span></td>
+                      <td>
+                        <span className={`badge badge-${sold ? 'sold' : 'available'}`}>{sold ? 'sold' : 'available'}</span>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--ink-muted)', marginTop: '0.3rem' }}>Qty: {sold ? 0 : (item.stock ?? 1)}</div>
+                      </td>
                       <td>
                         <div className="flex-gap" style={{ gap: '0.5rem' }}>
                           <button className="btn btn-ghost btn-sm" onClick={() => openEdit(item)}>Edit</button>
@@ -258,7 +293,7 @@ export default function AdminListings() {
               <div className="grid-2">
                 <div className="form-group">
                   <label className="form-label">Stock Quantity</label>
-                  <input className="form-input" type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} placeholder="1" />
+                  <input className="form-input" type="number" min="0" value={form.stock} onChange={(e) => handleStockChange(e.target.value)} placeholder="1" />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Condition</label>
@@ -271,7 +306,7 @@ export default function AdminListings() {
               <div className="grid-2">
                 <div className="form-group">
                   <label className="form-label">Status</label>
-                  <select className="form-select" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                  <select className="form-select" value={form.status} onChange={(e) => handleStatusChange(e.target.value)}>
                     <option value="available">Available</option>
                     <option value="sold">Sold</option>
                   </select>

@@ -15,6 +15,9 @@ const CATS = [
   { key: 'cupboard', label: 'Cupboards' },
 ];
 
+// An item is sold out when it is marked sold or its quantity is 0
+const isSoldOut = (item) => item.status === 'sold' || (item.stock != null && Number(item.stock) <= 0);
+
 
 export default function CustomerShop() {
   const navigate = useNavigate();
@@ -40,17 +43,21 @@ export default function CustomerShop() {
       .then(({ data }) => { setListings(data || []); setLoadingListings(false); });
   }, []);
 
+  // Sold items stay in the list (shown as "Sold Out"), after the available ones
   const filtered = listings
     .filter((item) =>
       (activeCat === 'all' || item.category === activeCat) &&
-      item.status !== 'sold' &&
       (!search || item.name?.toLowerCase().includes(search.toLowerCase()) || item.description?.toLowerCase().includes(search.toLowerCase()))
     )
     .sort((a, b) => {
+      const soldDiff = Number(isSoldOut(a)) - Number(isSoldOut(b));
+      if (soldDiff !== 0) return soldDiff;
       if (sortBy === 'price-asc') return Number(a.price) - Number(b.price);
       if (sortBy === 'price-desc') return Number(b.price) - Number(a.price);
       return new Date(b.created_at) - new Date(a.created_at);
     });
+
+  const availableCount = filtered.filter((item) => !isSoldOut(item)).length;
 
   const openViewing = (item) => {
     setViewingModal(item);
@@ -102,8 +109,8 @@ export default function CustomerShop() {
           </h1>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 600, color: '#0f1e2e' }}>{filtered.length}</p>
-          <p style={{ fontSize: '0.82rem', color: '#4a5e72', fontWeight: 600 }}>{filtered.length === 1 ? 'item available' : 'items available'}</p>
+          <p style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 600, color: '#0f1e2e' }}>{availableCount}</p>
+          <p style={{ fontSize: '0.82rem', color: '#4a5e72', fontWeight: 600 }}>{availableCount === 1 ? 'item available' : 'items available'}</p>
         </div>
       </section>
 
@@ -164,34 +171,46 @@ export default function CustomerShop() {
             <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 600, color: '#1a3a5c', marginBottom: '0.75rem' }}>{search ? `No results for "${search}"` : 'No items listed yet'}</p>
             <p style={{ fontSize: '1rem', color: '#4a5e72', fontWeight: 500 }}>{search ? 'Try a different search term or browse all categories.' : 'Check back soon — new pieces are added regularly.'}</p>
           </div>
-        ) : filtered.map((item) => (
-          <div key={item.id} className="product-card" onClick={() => navigate(`/shop/${item.id}`)}>
-            {/* Image */}
-            <div className="product-card-img">
-              {item.photo_url
-                ? <img src={item.photo_url} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.4s ease' }} />
-                : <div style={{ width: '100%', height: '100%', background: '#dde8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontFamily: 'var(--font-display)', color: 'rgba(26,58,92,0.3)', letterSpacing: '0.3em' }}>{item.category?.toUpperCase()}</span>
-                  </div>
-              }
-              {item.stock === 0
-                ? <span className="product-card-badge" style={{ background: '#7a1a00', color: 'white' }}>SOLD</span>
-                : <span className={`product-card-badge ${item.condition === 'New' ? 'badge-new' : 'badge-used'}`}>{item.condition}</span>
-              }
-              {(item.photos || []).length > 0 && (
-                <span className="product-card-count">+{(item.photos || []).length}</span>
-              )}
-            </div>
-            {/* Info */}
-            <div className="product-card-body">
-              <h3 className="product-card-name">{item.name}</h3>
-              <div className="product-card-footer">
-                <span className="product-card-price">${Number(item.price).toLocaleString()} <small>NZD</small></span>
-                <button className="product-card-cta" style={{ background: '#1a3a5c' }} onClick={(e) => { e.stopPropagation(); openViewing(item); }}>View</button>
+        ) : filtered.map((item) => {
+          const soldOut = isSoldOut(item);
+          return (
+            <div key={item.id} className="product-card" onClick={() => navigate(`/shop/${item.id}`)}>
+              {/* Image */}
+              <div className="product-card-img">
+                {item.photo_url
+                  ? <img src={item.photo_url} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.4s ease', opacity: soldOut ? 0.55 : 1, filter: soldOut ? 'grayscale(0.4)' : 'none' }} />
+                  : <div style={{ width: '100%', height: '100%', background: '#dde8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ fontFamily: 'var(--font-display)', color: 'rgba(26,58,92,0.3)', letterSpacing: '0.3em' }}>{item.category?.toUpperCase()}</span>
+                    </div>
+                }
+                {soldOut && (
+                  <span style={{ position: 'absolute', top: '0.6rem', left: '0.6rem', background: '#7a1a00', color: 'white', fontSize: '0.68rem', letterSpacing: '0.18em', textTransform: 'uppercase', padding: '0.3rem 0.75rem', fontWeight: 700, fontFamily: 'var(--font-body)' }}>Sold Out</span>
+                )}
+                {(item.photos || []).length > 0 && (
+                  <span className="product-card-count">+{(item.photos || []).length}</span>
+                )}
+              </div>
+              {/* Info */}
+              <div className="product-card-body">
+                <h3 className="product-card-name" style={{ color: soldOut ? '#6b7a88' : undefined }}>{item.name}</h3>
+                <div className="product-card-footer">
+                  <span className="product-card-price" style={{ color: soldOut ? '#8a98a6' : undefined, textDecoration: soldOut ? 'line-through' : 'none' }}>${Number(item.price).toLocaleString()} <small>NZD</small></span>
+                  {soldOut ? (
+                    <button
+                      className="product-card-cta"
+                      style={{ background: '#8a98a6', cursor: 'default' }}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/shop/${item.id}`); }}
+                    >
+                      Sold Out
+                    </button>
+                  ) : (
+                    <button className="product-card-cta" style={{ background: '#1a3a5c' }} onClick={(e) => { e.stopPropagation(); openViewing(item); }}>View</button>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* ── FOOTER ── */}
