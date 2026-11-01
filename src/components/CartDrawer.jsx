@@ -47,6 +47,7 @@ export default function CartDrawer() {
   });
   const [checkoutError, setCheckoutError] = useState('');
   const [placing, setPlacing] = useState(false);
+    const [showErrors, setShowErrors] = useState(false);
 
   // When the cart opens, drop any items that have been sold or removed since they were added
   useEffect(() => {
@@ -82,7 +83,7 @@ export default function CartDrawer() {
   }, [cartOpen]);
 
   if (!cartOpen) return null;
-
+  const fieldStyle = (v) => (showErrors && !String(v || '').trim() ? { borderColor: '#c04a1a', background: '#fff5f2' } : undefined);
   const handleProceedToCheckout = () => {
     if (!user) { setCartStep('login-prompt'); return; }
     setCheckoutError('');
@@ -93,10 +94,21 @@ export default function CartDrawer() {
   const handleConfirmOrder = async () => {
     if (placing) return;
     setCheckoutError('');
-    if (!checkout.name || !checkout.email) { setCheckoutError('Name and email are required.'); return; }
-    if (checkout.shippingOption === 'arrange' && (!checkout.street || !checkout.suburb || !checkout.postcode)) {
-      setCheckoutError('Please fill in your delivery address.'); return;
+    const needsAddress = checkout.shippingOption === 'arrange';
+    const missing =
+      !checkout.name.trim() || !checkout.phone.trim() || !checkout.email.trim() ||
+      (needsAddress && (!checkout.street.trim() || !checkout.suburb.trim() || !checkout.postcode.trim()));
+    if (missing) {
+      setShowErrors(true);
+      setCheckoutError('Please enter all required details (marked *) before confirming your order.');
+      return;
     }
+    if (checkout.phone.replace(/\D/g, '').length < 7) {
+      setShowErrors(true);
+      setCheckoutError('Please enter a valid phone number.');
+      return;
+    }
+    setShowErrors(false);
 
     setPlacing(true);
     try {
@@ -151,7 +163,7 @@ export default function CartDrawer() {
   };
 
   return (
-    <div className="modal-overlay" style={{ zIndex: 2000 }} onClick={closeCart}>
+    <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 2000 }} onClick={closeCart}>
       <div
         style={{ background: '#f8f4ee', border: '2px solid #b8c8d8', padding: 'clamp(1.25rem, 5vw, 2.5rem)', width: '100%', maxWidth: 540, marginLeft: 'auto', height: '100vh', maxHeight: '100vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}
         onClick={(e) => e.stopPropagation()}
@@ -242,16 +254,16 @@ export default function CartDrawer() {
             <div className="grid-2">
               <div className="form-group">
                 <label className="form-label">Full Name *</label>
-                <input className="form-input" value={checkout.name} onChange={(e) => setCheckout({ ...checkout, name: e.target.value })} placeholder="Your name" />
+                <input className="form-input" style={fieldStyle(checkout.name)} value={checkout.name} onChange={(e) => setCheckout({ ...checkout, name: e.target.value })} placeholder="Your name" />
               </div>
               <div className="form-group">
-                <label className="form-label">Phone</label>
-                <input className="form-input" value={checkout.phone} onChange={(e) => setCheckout({ ...checkout, phone: e.target.value })} placeholder="021 XXX XXX" />
+                <label className="form-label">Phone *</label>
+                <input className="form-input" style={fieldStyle(checkout.phone)} value={checkout.phone} onChange={(e) => setCheckout({ ...checkout, phone: e.target.value })} placeholder="021 XXX XXX" />
               </div>
             </div>
             <div className="form-group">
               <label className="form-label">Email *</label>
-              <input className="form-input" value={checkout.email} onChange={(e) => setCheckout({ ...checkout, email: e.target.value })} placeholder="you@email.com" />
+              <input className="form-input" style={fieldStyle(checkout.email)} value={checkout.email} onChange={(e) => setCheckout({ ...checkout, email: e.target.value })} placeholder="you@email.com" />
             </div>
 
             {/* Shipping */}
@@ -264,12 +276,12 @@ export default function CartDrawer() {
                 <p style={{ fontSize: '0.78rem', color: '#1a3a5c', fontWeight: 700, marginBottom: '0.75rem', letterSpacing: '0.08em' }}>Delivery Address</p>
                 <div className="form-group">
                   <label className="form-label">Street Address *</label>
-                  <input className="form-input" value={checkout.street} onChange={(e) => setCheckout({ ...checkout, street: e.target.value })} placeholder="14 Example Street" />
+                  <input className="form-input" style={fieldStyle(checkout.street)} value={checkout.street} onChange={(e) => setCheckout({ ...checkout, street: e.target.value })} placeholder="14 Example Street" />
                 </div>
                 <div className="grid-2">
                   <div className="form-group">
                     <label className="form-label">Suburb *</label>
-                    <input className="form-input" value={checkout.suburb} onChange={(e) => setCheckout({ ...checkout, suburb: e.target.value })} placeholder="Ponsonby" />
+                    <input className="form-input" style={fieldStyle(checkout.suburb)} value={checkout.suburb} onChange={(e) => setCheckout({ ...checkout, suburb: e.target.value })} placeholder="Ponsonby" />
                   </div>
                   <div className="form-group">
                     <label className="form-label">City</label>
@@ -278,7 +290,7 @@ export default function CartDrawer() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Postcode *</label>
-                  <input className="form-input" value={checkout.postcode} onChange={(e) => setCheckout({ ...checkout, postcode: e.target.value })} placeholder="1011" />
+                  <input className="form-input" style={fieldStyle(checkout.postcode)} value={checkout.postcode} onChange={(e) => setCheckout({ ...checkout, postcode: e.target.value })} placeholder="1011" />
                 </div>
                 <div style={{ background: '#fff3cd', border: '1.5px solid #c8960a', padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#664d00', fontWeight: 600 }}>
                   Shipping cost will be confirmed by our team after order placement.
@@ -316,6 +328,7 @@ export default function CartDrawer() {
               </div>
             </div>
 
+            {checkoutError && <div style={{ background: '#fde8e8', border: '1.5px solid #c04a1a', color: '#7a1a00', padding: '0.8rem 1rem', fontSize: '0.9rem', fontWeight: 700, marginBottom: '1rem' }}>{checkoutError}</div>}
             <button
               style={{ ...darkBtn, width: '100%', padding: '1.1rem', fontSize: '0.88rem', opacity: placing ? 0.7 : 1, cursor: placing ? 'not-allowed' : 'pointer' }}
               onClick={handleConfirmOrder}
