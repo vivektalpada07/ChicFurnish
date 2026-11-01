@@ -46,44 +46,75 @@ export default function CartDrawer() {
     notes: '',
   });
   const [checkoutError, setCheckoutError] = useState('');
+  const [placing, setPlacing] = useState(false);
 
   if (!cartOpen) return null;
 
   const handleProceedToCheckout = () => {
     if (!user) { setCartStep('login-prompt'); return; }
+    setCheckoutError('');
     setCheckout((prev) => ({ ...prev, name: user.name || '', email: user.email || '', phone: user.phone || '' }));
     setCartStep('checkout');
   };
 
   const handleConfirmOrder = async () => {
+    if (placing) return;
     setCheckoutError('');
     if (!checkout.name || !checkout.email) { setCheckoutError('Name and email are required.'); return; }
     if (checkout.shippingOption === 'arrange' && (!checkout.street || !checkout.suburb || !checkout.postcode)) {
       setCheckoutError('Please fill in your delivery address.'); return;
     }
 
-    // Save order to Supabase
-    const orderData = {
-      id: `ORD-${Date.now()}`,
-      customer_name: checkout.name,
-      customer_email: checkout.email,
-      customer_phone: checkout.phone,
-      items: cart.map((c) => ({ id: c.id, name: c.name, price: c.price, condition: c.condition })),
-      total: cartTotal,
-      shipping_option: checkout.shippingOption,
-      street: checkout.street,
-      suburb: checkout.suburb,
-      city: checkout.city,
-      postcode: checkout.postcode,
-      payment_method: checkout.paymentMethod,
-      notes: checkout.notes,
-      status: 'pending',
-    };
-    await supabase.from('orders').insert(orderData);
-    supabase.functions.invoke('notify-admin', { body: { type: 'order', data: orderData } });
+    setPlacing(true);
+    try {
+      // 1) Reserve the items (takes one off the stock; the database then marks them Sold).
+      //    If someone else bought one a moment ago, this fails and nothing is changed.
+      const { error: reserveError } = await supabase.rpc('reserve_listings', { p_ids: cart.map((c) => c.id) });
+      if (reserveError) {
+        const match = /ITEM_SOLD:([0-9a-f-]{36})/i.exec(reserveError.message || '');
+        if (match) {
+          const soldItem = cart.find((c) => c.id === match[1]);
+          const lastItem = cart.length <= 1;
+          removeFromCart(match[1]);
+          setCheckoutError(`Sorry, "${soldItem?.name || 'an item'}" has just been sold and was removed from your cart.`);
+          if (lastItem) setCartStep('cart');
+        } else {
+          setCheckoutError('Something went wrong placing your order. Please try again.');
+        }
+        return;
+      }
 
-    setCartStep('confirmed');
-    clearCart();
+      // 2) Save the order
+      const orderData = {
+        id: `ORD-${Date.now()}`,
+        customer_name: checkout.name,
+        customer_email: checkout.email,
+        customer_phone: checkout.phone,
+        items: cart.map((c) => ({ id: c.id, name: c.name, price: c.price, condition: c.condition })),
+        total: cartTotal,
+        shipping_option: checkout.shippingOption,
+        street: checkout.street,
+        suburb: checkout.suburb,
+        city: checkout.city,
+        postcode: checkout.postcode,
+        payment_method: checkout.paymentMethod,
+        notes: checkout.notes,
+        status: 'pending',
+      };
+      const { error: orderError } = await supabase.from('orders').insert(orderData);
+      if (orderError) {
+        setCheckoutError('We could not save your order. Please contact us before trying again.');
+        return;
+      }
+      supabase.functions.invoke('notify-admin', { body: { type: 'order', data: orderData } });
+
+      setCartStep('confirmed');
+      clearCart();
+    } catch (err) {
+      setCheckoutError('Something went wrong placing your order. Please try again.');
+    } finally {
+      setPlacing(false);
+    }
   };
 
   return (
@@ -100,6 +131,7 @@ export default function CartDrawer() {
               <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 600, color: '#0f1e2e' }}>Your Cart</h2>
               <button style={{ background: 'none', border: '2px solid #b8c8d8', color: '#2a3d52', padding: '0.4rem 0.9rem', fontSize: '0.75rem', fontFamily: 'var(--font-body)', fontWeight: 700, cursor: 'pointer' }} onClick={closeCart}>✕ Close</button>
             </div>
+            {checkoutError && <div style={{ background: '#fde8e8', border: '1.5px solid #c04a1a', color: '#7a1a00', padding: '0.8rem 1rem', fontSize: '0.9rem', fontWeight: 700, marginBottom: '1rem' }}>{checkoutError}</div>}
             <div style={{ flex: 1 }}>
               {cart.length === 0 ? (
                 <div style={{ textAlign: 'center', paddingTop: '3rem' }}>
@@ -231,11 +263,10 @@ export default function CartDrawer() {
               <textarea className="form-textarea" style={{ minHeight: 65 }} value={checkout.notes} onChange={(e) => setCheckout({ ...checkout, notes: e.target.value })} placeholder="Gate code, access instructions, preferred time…" />
             </div>
 
-            {/* Payment */}
+            {/* Payment — Bank Transfer and Cash only */}
             <p style={{ fontSize: '0.72rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#1a3a5c', fontWeight: 700, margin: '1.25rem 0 0.75rem', borderBottom: '1.5px solid #b8c8d8', paddingBottom: '0.5rem' }}>Payment Method</p>
             <RadioRow label="Bank Transfer" sublabel="Our account details will be emailed to you after confirmation" value="bank" field="paymentMethod" checkout={checkout} setCheckout={setCheckout} />
             <RadioRow label="Cash on Pickup / Delivery" sublabel="Pay cash when your item arrives or you collect" value="cash" field="paymentMethod" checkout={checkout} setCheckout={setCheckout} />
-            <RadioRow label="Card Payment" sublabel="We will arrange card payment on delivery or pickup" value="card" field="paymentMethod" checkout={checkout} setCheckout={setCheckout} />
 
             {/* Total box */}
             <div style={{ background: '#1a3a5c', padding: '1.25rem', margin: '1.25rem 0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -252,8 +283,12 @@ export default function CartDrawer() {
               </div>
             </div>
 
-            <button style={{ ...darkBtn, width: '100%', padding: '1.1rem', fontSize: '0.88rem' }} onClick={handleConfirmOrder}>
-              Confirm Order →
+            <button
+              style={{ ...darkBtn, width: '100%', padding: '1.1rem', fontSize: '0.88rem', opacity: placing ? 0.7 : 1, cursor: placing ? 'not-allowed' : 'pointer' }}
+              onClick={handleConfirmOrder}
+              disabled={placing}
+            >
+              {placing ? 'Placing order…' : 'Confirm Order →'}
             </button>
           </>
         )}
@@ -274,7 +309,7 @@ export default function CartDrawer() {
             <div style={{ background: '#d6e8f5', border: '1.5px solid #2e5f8a', padding: '1rem', marginBottom: '2rem', width: '100%', maxWidth: 320, textAlign: 'left' }}>
               <p style={{ fontSize: '0.72rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#1a3a5c', fontWeight: 700, marginBottom: '0.4rem' }}>Payment</p>
               <p style={{ fontSize: '0.92rem', color: '#0f1e2e', fontWeight: 600 }}>
-                {checkout.paymentMethod === 'bank' ? 'Bank Transfer — our account details coming via email' : checkout.paymentMethod === 'cash' ? 'Cash on delivery / collection' : 'Card — our team will contact you'}
+                {checkout.paymentMethod === 'bank' ? 'Bank Transfer — our account details coming via email' : 'Cash on delivery / collection'}
               </p>
             </div>
             <button style={darkBtn} onClick={() => { closeCart(); setCartStep('cart'); }}>Continue Browsing</button>
