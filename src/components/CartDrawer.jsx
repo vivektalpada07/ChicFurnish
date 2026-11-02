@@ -47,7 +47,7 @@ export default function CartDrawer() {
   });
   const [checkoutError, setCheckoutError] = useState('');
   const [placing, setPlacing] = useState(false);
-    const [showErrors, setShowErrors] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
 
   // When the cart opens, drop any items that have been sold or removed since they were added
   useEffect(() => {
@@ -56,15 +56,15 @@ export default function CartDrawer() {
     (async () => {
       const { data, error } = await supabase
         .from('listings')
-        .select('id, status, quantity')
+        .select('id, status, stock')
         .in('id', cart.map((c) => c.id));
       if (cancelled || error || !data) return;
 
       const stillAvailable = new Set(
         data
           .filter((l) =>
-            String(l.status || '').toLowerCase() !== 'sold' &&
-            !(l.quantity != null && Number(l.quantity) <= 0)
+            String(l.status || '').toLowerCase() === 'available' &&
+            !(l.stock != null && Number(l.stock) <= 0)
           )
           .map((l) => l.id)
       );
@@ -83,7 +83,9 @@ export default function CartDrawer() {
   }, [cartOpen]);
 
   if (!cartOpen) return null;
+
   const fieldStyle = (v) => (showErrors && !String(v || '').trim() ? { borderColor: '#c04a1a', background: '#fff5f2' } : undefined);
+
   const handleProceedToCheckout = () => {
     if (!user) { setCartStep('login-prompt'); return; }
     setCheckoutError('');
@@ -112,24 +114,6 @@ export default function CartDrawer() {
 
     setPlacing(true);
     try {
-      // 1) Reserve the items (takes one off the stock; the database then marks them Sold).
-      //    If someone else bought one a moment ago, this fails and nothing is changed.
-      const { error: reserveError } = await supabase.rpc('reserve_listings', { p_ids: cart.map((c) => c.id) });
-      if (reserveError) {
-        const match = /ITEM_SOLD:([0-9a-f-]{36})/i.exec(reserveError.message || '');
-        if (match) {
-          const soldItem = cart.find((c) => c.id === match[1]);
-          const lastItem = cart.length <= 1;
-          removeFromCart(match[1]);
-          setCheckoutError(`Sorry, "${soldItem?.name || 'an item'}" has just been sold and was removed from your cart.`);
-          if (lastItem) setCartStep('cart');
-        } else {
-          setCheckoutError('Something went wrong placing your order. Please try again.');
-        }
-        return;
-      }
-
-      // 2) Save the order
       const orderData = {
         id: `ORD-${Date.now()}`,
         customer_name: checkout.name,
@@ -146,16 +130,39 @@ export default function CartDrawer() {
         notes: checkout.notes,
         status: 'pending',
       };
-      const { error: orderError } = await supabase.from('orders').insert(orderData);
+
+      // Reserve the items AND save the order in one database transaction.
+      // If anything fails, the reservation is rolled back automatically,
+      // so an item can never be left marked Sold without an order.
+      const { error: orderError } = await supabase.rpc('place_order', {
+        p_ids: cart.map((c) => c.id),
+        p_order: orderData,
+      });
+
       if (orderError) {
-        setCheckoutError('We could not save your order. Please contact us before trying again.');
+        const match = /ITEM_SOLD:([0-9a-f-]{36})/i.exec(orderError.message || '');
+        if (match) {
+          const soldItem = cart.find((c) => c.id === match[1]);
+          const lastItem = cart.length <= 1;
+          removeFromCart(match[1]);
+          setCheckoutError(`Sorry, "${soldItem?.name || 'an item'}" has just been sold and was removed from your cart.`);
+          if (lastItem) setCartStep('cart');
+        } else if (String(orderError.message || '').includes('NOT_SIGNED_IN')) {
+          setCheckoutError('Please sign in again to place your order.');
+        } else {
+          console.error('PLACE ORDER ERROR:', orderError);
+          setCheckoutError('We could not save your order. Please contact us before trying again.');
+        }
         return;
       }
+
+      // Emails are sent only after the order has been saved
       supabase.functions.invoke('notify-admin', { body: { type: 'order', data: orderData } });
 
       setCartStep('confirmed');
       clearCart();
     } catch (err) {
+      console.error('PLACE ORDER EXCEPTION:', err);
       setCheckoutError('Something went wrong placing your order. Please try again.');
     } finally {
       setPlacing(false);
