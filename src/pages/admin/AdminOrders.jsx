@@ -4,10 +4,15 @@ import { supabase } from '../../lib/supabase';
 
 const STATUS_COLORS = {
   pending:    { bg: '#fff3cd', color: '#664d00', border: '#c8960a' },
-  confirmed:  { bg: '#d4edda', color: '#0f4020', border: '#1e8840' },
   completed:  { bg: '#d6e8f5', color: '#0f1e2e', border: '#1a3a5c' },
   cancelled:  { bg: '#fde8e8', color: '#7a1a00', border: '#c04a1a' },
 };
+
+// Orders are Pending -> Completed (delivered / collected) or Cancelled
+const STATUS_OPTIONS = ['pending', 'completed', 'cancelled'];
+
+// Older orders that were saved as "confirmed" are treated as pending
+const normalise = (status) => (status === 'confirmed' ? 'pending' : status);
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
@@ -22,12 +27,20 @@ export default function AdminOrders() {
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
-    setOrders(data || []);
+    setOrders((data || []).map((o) => ({ ...o, status: normalise(o.status) })));
   }
 
   const updateStatus = async (id, status) => {
+    const order = orders.find((o) => o.id === id);
+    if (!order) return;
+
     if (status === 'cancelled') {
       const ok = window.confirm('Cancel this order and email the customer?');
+      if (!ok) return;
+    }
+    if (status === 'completed') {
+      const what = order.shipping_option === 'pickup' ? 'collected' : 'delivered';
+      const ok = window.confirm(`Mark this order as ${what} and email the customer?`);
       if (!ok) return;
     }
 
@@ -43,12 +56,12 @@ export default function AdminOrders() {
     setOrders((prev) => prev.map((o) => o.id === id ? { ...o, status } : o));
     if (selected?.id === id) setSelected((prev) => ({ ...prev, status }));
 
-    // Email the customer only when the order is cancelled
+    // Email the customer when the order is cancelled or completed
     if (status === 'cancelled') {
-      const order = orders.find((o) => o.id === id);
-      if (order) {
-        supabase.functions.invoke('notify-admin', { body: { type: 'order-cancelled', data: order } });
-      }
+      supabase.functions.invoke('notify-admin', { body: { type: 'order-cancelled', data: order } });
+    }
+    if (status === 'completed') {
+      supabase.functions.invoke('notify-admin', { body: { type: 'order-completed', data: order } });
     }
     setUpdating(false);
   };
@@ -58,8 +71,8 @@ export default function AdminOrders() {
   const counts = {
     all: orders.length,
     pending: orders.filter((o) => o.status === 'pending').length,
-    confirmed: orders.filter((o) => o.status === 'confirmed').length,
     completed: orders.filter((o) => o.status === 'completed').length,
+    cancelled: orders.filter((o) => o.status === 'cancelled').length,
   };
 
   const tabStyle = (key) => ({
@@ -85,8 +98,8 @@ export default function AdminOrders() {
           {[
             { label: 'Total Orders', value: counts.all },
             { label: 'Pending', value: counts.pending, highlight: counts.pending > 0 },
-            { label: 'Confirmed', value: counts.confirmed },
             { label: 'Completed', value: counts.completed },
+            { label: 'Cancelled', value: counts.cancelled },
           ].map((s) => (
             <div className="stat-card" key={s.label}>
               <div className="stat-label">{s.label}</div>
@@ -96,7 +109,7 @@ export default function AdminOrders() {
         </div>
 
         <div style={{ display: 'flex', marginBottom: '1.5rem' }}>
-          {[['all', `All (${counts.all})`], ['pending', `Pending (${counts.pending})`], ['confirmed', `Confirmed (${counts.confirmed})`], ['completed', `Completed (${counts.completed})`]].map(([key, label]) => (
+          {[['all', `All (${counts.all})`], ['pending', `Pending (${counts.pending})`], ['completed', `Completed (${counts.completed})`], ['cancelled', `Cancelled (${counts.cancelled})`]].map(([key, label]) => (
             <button key={key} style={tabStyle(key)} onClick={() => setFilterStatus(key)}>{label}</button>
           ))}
         </div>
@@ -159,7 +172,7 @@ export default function AdminOrders() {
                   <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', fontFamily: 'var(--font-body)', letterSpacing: '0.05em' }}>{selected.id}</p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                  {['pending', 'confirmed', 'completed', 'cancelled'].map((s) => (
+                  {STATUS_OPTIONS.map((s) => (
                     <button
                       key={s}
                       onClick={() => updateStatus(selected.id, s)}
@@ -179,6 +192,10 @@ export default function AdminOrders() {
                   ))}
                 </div>
               </div>
+
+              <p style={{ fontSize: '0.78rem', color: 'var(--ink-muted)', marginTop: '-0.75rem', marginBottom: '1.25rem', textAlign: 'right' }}>
+                Completed or Cancelled sends an email to the customer.
+              </p>
 
               {/* Customer */}
               <div style={{ background: 'var(--blue-pale)', borderLeft: '3px solid var(--blue)', padding: '1rem 1.25rem', marginBottom: '1.25rem' }}>

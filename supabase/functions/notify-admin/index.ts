@@ -479,6 +479,44 @@ serve(async (req) => {
       `), ADMIN_EMAIL)
     }
 
+    // ── ORDER COMPLETED / DELIVERED / COLLECTED (customer email) ─────────────
+    else if (type === 'order-completed') {
+      const isPickup = data.shipping_option === 'pickup'
+      const itemRows = (data.items || []).map((i: {name:string,price:number}) => `
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #eef5fb;font-size:14px;color:#0f1e2e;font-weight:500;">${i.name}</td>
+          <td style="padding:10px 0;border-bottom:1px solid #eef5fb;font-size:14px;color:#c04a1a;font-weight:700;text-align:right;">$${Number(i.price).toLocaleString()}</td>
+        </tr>`).join('')
+
+      await sendEmail(data.customer_email, `${isPickup ? 'Your order has been collected' : 'Your order has been delivered'} — ${data.id}`, emailWrapper(`
+        <div style="background:#1a3a5c;margin:-40px -48px 32px;padding:24px 48px;text-align:center;">
+          <p style="margin:0;font-size:36px;">✓</p>
+          <p style="margin:8px 0 0;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:rgba(214,232,245,0.7);font-weight:700;">${isPickup ? 'Order Collected' : 'Order Delivered'}</p>
+        </div>
+
+        <h1 style="margin:0 0 8px;font-size:28px;color:#0f1e2e;font-weight:300;">Thank you, ${(data.customer_name || '').split(' ')[0]}!</h1>
+        <p style="margin:0 0 28px;font-size:15px;color:#4a5e72;line-height:1.8;">
+          Your order <strong style="color:#0f1e2e;">${data.id}</strong> is complete. ${isPickup ? 'Thanks for collecting your furniture.' : 'Your furniture has been delivered.'} We hope you love it.
+        </p>
+
+        <p style="margin:0 0 10px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Your Items</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+          ${itemRows}
+          <tr>
+            <td style="padding:12px 0;font-family:'Georgia',serif;font-size:16px;color:#0f1e2e;font-weight:600;">Total</td>
+            <td style="padding:12px 0;font-family:'Georgia',serif;font-size:20px;color:#c04a1a;font-weight:700;text-align:right;">$${Number(data.total).toLocaleString()} NZD</td>
+          </tr>
+        </table>
+
+        <p style="margin:0 0 24px;font-size:14px;color:#4a5e72;line-height:1.8;">
+          If anything isn't right, just reply to this email and our team will help.
+        </p>
+        <a href="${SITE}/shop" style="background:#1a3a5c;color:#f0d8c8;padding:14px 32px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
+          Browse More Furniture →
+        </a>
+      `), ADMIN_EMAIL)
+    }
+
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
