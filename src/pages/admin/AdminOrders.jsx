@@ -26,10 +26,30 @@ export default function AdminOrders() {
   }
 
   const updateStatus = async (id, status) => {
+    if (status === 'cancelled') {
+      const ok = window.confirm('Cancel this order and email the customer?');
+      if (!ok) return;
+    }
+
     setUpdating(true);
-    await supabase.from('orders').update({ status }).eq('id', id);
+    const { error } = await supabase.from('orders').update({ status }).eq('id', id);
+    if (error) {
+      console.error('UPDATE ORDER ERROR:', error);
+      alert('Could not update the order. Please try again.');
+      setUpdating(false);
+      return;
+    }
+
     setOrders((prev) => prev.map((o) => o.id === id ? { ...o, status } : o));
     if (selected?.id === id) setSelected((prev) => ({ ...prev, status }));
+
+    // Email the customer only when the order is cancelled
+    if (status === 'cancelled') {
+      const order = orders.find((o) => o.id === id);
+      if (order) {
+        supabase.functions.invoke('notify-admin', { body: { type: 'order-cancelled', data: order } });
+      }
+    }
     setUpdating(false);
   };
 

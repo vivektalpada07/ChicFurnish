@@ -5,6 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const SITE = 'https://www.chicfurnish.co.nz'
 const FROM = 'Chic Furnish <noreply@chicfurnish.co.nz>'
 const ADMIN_EMAILS = ['chicfurnish1@gmail.com']
 const ADMIN_EMAIL = ADMIN_EMAILS[0]
@@ -68,7 +69,7 @@ const emailWrapper = (content: string) => `
           <td style="background:#f8f4ee;border-top:1px solid #d6e8f5;padding:20px 48px;">
             <p style="margin:0;font-size:11px;color:#8aabb8;text-align:center;line-height:1.6;">
               Chic Furnish · Auckland, New Zealand<br>
-              <a href="https://chic-style-website.vercel.app" style="color:#c04a1a;text-decoration:none;">chic-style-website.vercel.app</a>
+              <a href="${SITE}" style="color:#c04a1a;text-decoration:none;">www.chicfurnish.co.nz</a>
             </p>
           </td>
         </tr>
@@ -116,7 +117,7 @@ serve(async (req) => {
             </tr>`).join('')}
         </table>
         <div style="margin-top:28px;">
-          <a href="https://chic-style-website.vercel.app/admin/bookings" style="background:#1a3a5c;color:#f0d8c8;padding:12px 28px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;">
+          <a href="${SITE}/admin/bookings" style="background:#1a3a5c;color:#f0d8c8;padding:12px 28px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;">
             View in Dashboard →
           </a>
         </div>
@@ -143,7 +144,7 @@ serve(async (req) => {
             </tr>`).join('')}
         </table>
         <div style="margin-top:28px;">
-          <a href="https://chic-style-website.vercel.app/admin/quotes" style="background:#1a3a5c;color:#f0d8c8;padding:12px 28px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;">
+          <a href="${SITE}/admin/quotes" style="background:#1a3a5c;color:#f0d8c8;padding:12px 28px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;">
             View in Dashboard →
           </a>
         </div>
@@ -200,7 +201,7 @@ serve(async (req) => {
               </a>
             </td>
             <td>
-              <a href="https://chic-style-website.vercel.app/admin/enquiries" style="background:#1a3a5c;color:#f0d8c8;padding:14px 32px;text-decoration:none;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;display:inline-block;">
+              <a href="${SITE}/admin/enquiries" style="background:#1a3a5c;color:#f0d8c8;padding:14px 32px;text-decoration:none;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;display:inline-block;">
                 View Dashboard →
               </a>
             </td>
@@ -238,7 +239,7 @@ serve(async (req) => {
           <p style="margin:0;font-size:15px;color:#0f1e2e;line-height:1.8;font-style:italic;">"${data.message}"</p>
         </div>
 
-        <a href="https://chic-style-website.vercel.app/shop" style="background:#1a3a5c;color:#f0d8c8;padding:14px 32px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
+        <a href="${SITE}/shop" style="background:#1a3a5c;color:#f0d8c8;padding:14px 32px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
           Browse More Furniture →
         </a>
       `), ADMIN_EMAIL)
@@ -270,7 +271,7 @@ serve(async (req) => {
         <p style="margin:0 0 24px;font-size:13px;color:#4a5e72;line-height:1.7;">
           Have more questions? Simply reply to this email and we'll get back to you.
         </p>
-        <a href="https://chic-style-website.vercel.app/shop" style="background:#1a3a5c;color:#f0d8c8;padding:12px 28px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
+        <a href="${SITE}/shop" style="background:#1a3a5c;color:#f0d8c8;padding:12px 28px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
           View Item in Shop →
         </a>
       `), ADMIN_EMAIL)
@@ -309,7 +310,7 @@ serve(async (req) => {
           Please arrive a few minutes early. If you need to reschedule, reply to this email or contact us directly.
         </p>
 
-        <a href="https://chic-style-website.vercel.app/shop" style="background:#1a3a5c;color:#f0d8c8;padding:12px 28px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
+        <a href="${SITE}/shop" style="background:#1a3a5c;color:#f0d8c8;padding:12px 28px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
           Browse More Furniture →
         </a>
       `))
@@ -325,7 +326,7 @@ serve(async (req) => {
         <p style="margin:0 0 28px;font-size:15px;color:#4a5e72;line-height:1.7;">
           Please feel free to browse our other available pieces or contact us to arrange an alternative time.
         </p>
-        <a href="https://chic-style-website.vercel.app/shop" style="background:#1a3a5c;color:#f0d8c8;padding:12px 28px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
+        <a href="${SITE}/shop" style="background:#1a3a5c;color:#f0d8c8;padding:12px 28px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
           Browse Furniture →
         </a>
       `))
@@ -394,7 +395,7 @@ serve(async (req) => {
           </tr>
         </table>
 
-        <a href="https://chic-style-website.vercel.app/admin/orders" style="background:#c04a1a;color:#fff;padding:14px 32px;text-decoration:none;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;display:inline-block;">
+        <a href="${SITE}/admin/orders" style="background:#c04a1a;color:#fff;padding:14px 32px;text-decoration:none;font-size:13px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;display:inline-block;">
           View Order in Dashboard →
         </a>
       `))
@@ -439,8 +440,41 @@ serve(async (req) => {
         <p style="margin:0 0 24px;font-size:13px;color:#4a5e72;line-height:1.7;">
           Questions about your order? Reply to this email and our team will get back to you.
         </p>
-        <a href="https://chic-style-website.vercel.app/shop" style="background:#1a3a5c;color:#f0d8c8;padding:14px 32px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
+        <a href="${SITE}/shop" style="background:#1a3a5c;color:#f0d8c8;padding:14px 32px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
           Continue Shopping →
+        </a>
+      `), ADMIN_EMAIL)
+    }
+
+    // ── ORDER CANCELLED (customer email) ─────────────────────
+    else if (type === 'order-cancelled') {
+      const itemRows = (data.items || []).map((i: {name:string,price:number}) => `
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #eef5fb;font-size:14px;color:#0f1e2e;font-weight:500;">${i.name}</td>
+          <td style="padding:10px 0;border-bottom:1px solid #eef5fb;font-size:14px;color:#4a5e72;text-align:right;">$${Number(i.price).toLocaleString()}</td>
+        </tr>`).join('')
+
+      await sendEmail(data.customer_email, `Your order has been cancelled — ${data.id}`, emailWrapper(`
+        <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#c04a1a;font-weight:700;">Order Update</p>
+        <h1 style="margin:0 0 8px;font-size:26px;color:#0f1e2e;font-weight:300;">Your order has been cancelled</h1>
+        <p style="margin:0 0 24px;font-size:15px;color:#4a5e72;line-height:1.8;">
+          Hi ${(data.customer_name || '').split(' ')[0]}, we're sorry, but we're unable to fulfil your order <strong style="color:#0f1e2e;">${data.id}</strong>, so we've cancelled it.
+        </p>
+
+        <p style="margin:0 0 10px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#4a5e72;font-weight:700;">Cancelled Items</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+          ${itemRows}
+          <tr>
+            <td style="padding:12px 0;font-family:'Georgia',serif;font-size:16px;color:#0f1e2e;font-weight:600;">Total</td>
+            <td style="padding:12px 0;font-family:'Georgia',serif;font-size:18px;color:#4a5e72;font-weight:700;text-align:right;">$${Number(data.total).toLocaleString()} NZD</td>
+          </tr>
+        </table>
+
+        <p style="margin:0 0 24px;font-size:14px;color:#4a5e72;line-height:1.8;">
+          If you have already paid, we will refund you in full. Please reply to this email if you have any questions.
+        </p>
+        <a href="${SITE}/shop" style="background:#1a3a5c;color:#f0d8c8;padding:14px 32px;text-decoration:none;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;font-weight:600;display:inline-block;">
+          Browse Other Furniture →
         </a>
       `), ADMIN_EMAIL)
     }
