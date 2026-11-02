@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -47,8 +47,44 @@ export default function CartDrawer() {
   });
   const [checkoutError, setCheckoutError] = useState('');
   const [placing, setPlacing] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
+
+  // When the cart opens, drop any items that have been sold or removed since they were added
+  useEffect(() => {
+    if (!cartOpen || cart.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('id, status, stock')
+        .in('id', cart.map((c) => c.id));
+      if (cancelled || error || !data) return;
+
+      const stillAvailable = new Set(
+        data
+          .filter((l) =>
+            String(l.status || '').toLowerCase() === 'available' &&
+            !(l.stock != null && Number(l.stock) <= 0)
+          )
+          .map((l) => l.id)
+      );
+      const gone = cart.filter((c) => !stillAvailable.has(c.id));
+      if (gone.length === 0) return;
+
+      gone.forEach((c) => removeFromCart(c.id));
+      setCheckoutError(
+        gone.length === 1
+          ? `Sorry, "${gone[0].name}" has been sold and was removed from your cart.`
+          : `Sorry, ${gone.length} items in your cart have been sold and were removed.`
+      );
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartOpen]);
 
   if (!cartOpen) return null;
+
+  const fieldStyle = (v) => (showErrors && !String(v || '').trim() ? { borderColor: '#c04a1a', background: '#fff5f2' } : undefined);
 
   const handleProceedToCheckout = () => {
     if (!user) { setCartStep('login-prompt'); return; }
@@ -60,31 +96,24 @@ export default function CartDrawer() {
   const handleConfirmOrder = async () => {
     if (placing) return;
     setCheckoutError('');
-    if (!checkout.name || !checkout.email) { setCheckoutError('Name and email are required.'); return; }
-    if (checkout.shippingOption === 'arrange' && (!checkout.street || !checkout.suburb || !checkout.postcode)) {
-      setCheckoutError('Please fill in your delivery address.'); return;
+    const needsAddress = checkout.shippingOption === 'arrange';
+    const missing =
+      !checkout.name.trim() || !checkout.phone.trim() || !checkout.email.trim() ||
+      (needsAddress && (!checkout.street.trim() || !checkout.suburb.trim() || !checkout.postcode.trim()));
+    if (missing) {
+      setShowErrors(true);
+      setCheckoutError('Please enter all required details (marked *) before confirming your order.');
+      return;
     }
+    if (checkout.phone.replace(/\D/g, '').length < 7) {
+      setShowErrors(true);
+      setCheckoutError('Please enter a valid phone number.');
+      return;
+    }
+    setShowErrors(false);
 
     setPlacing(true);
     try {
-      // 1) Reserve the items (takes one off the stock; the database then marks them Sold).
-      //    If someone else bought one a moment ago, this fails and nothing is changed.
-      const { error: reserveError } = await supabase.rpc('reserve_listings', { p_ids: cart.map((c) => c.id) });
-      if (reserveError) {
-        const match = /ITEM_SOLD:([0-9a-f-]{36})/i.exec(reserveError.message || '');
-        if (match) {
-          const soldItem = cart.find((c) => c.id === match[1]);
-          const lastItem = cart.length <= 1;
-          removeFromCart(match[1]);
-          setCheckoutError(`Sorry, "${soldItem?.name || 'an item'}" has just been sold and was removed from your cart.`);
-          if (lastItem) setCartStep('cart');
-        } else {
-          setCheckoutError('Something went wrong placing your order. Please try again.');
-        }
-        return;
-      }
-
-      // 2) Save the order
       const orderData = {
         id: `ORD-${Date.now()}`,
         customer_name: checkout.name,
@@ -101,16 +130,39 @@ export default function CartDrawer() {
         notes: checkout.notes,
         status: 'pending',
       };
-      const { error: orderError } = await supabase.from('orders').insert(orderData);
+
+      // Reserve the items AND save the order in one database transaction.
+      // If anything fails, the reservation is rolled back automatically,
+      // so an item can never be left marked Sold without an order.
+      const { error: orderError } = await supabase.rpc('place_order', {
+        p_ids: cart.map((c) => c.id),
+        p_order: orderData,
+      });
+
       if (orderError) {
-        setCheckoutError('We could not save your order. Please contact us before trying again.');
+        const match = /ITEM_SOLD:([0-9a-f-]{36})/i.exec(orderError.message || '');
+        if (match) {
+          const soldItem = cart.find((c) => c.id === match[1]);
+          const lastItem = cart.length <= 1;
+          removeFromCart(match[1]);
+          setCheckoutError(`Sorry, "${soldItem?.name || 'an item'}" has just been sold and was removed from your cart.`);
+          if (lastItem) setCartStep('cart');
+        } else if (String(orderError.message || '').includes('NOT_SIGNED_IN')) {
+          setCheckoutError('Please sign in again to place your order.');
+        } else {
+          console.error('PLACE ORDER ERROR:', orderError);
+          setCheckoutError('We could not save your order. Please contact us before trying again.');
+        }
         return;
       }
+
+      // Emails are sent only after the order has been saved
       supabase.functions.invoke('notify-admin', { body: { type: 'order', data: orderData } });
 
       setCartStep('confirmed');
       clearCart();
     } catch (err) {
+      console.error('PLACE ORDER EXCEPTION:', err);
       setCheckoutError('Something went wrong placing your order. Please try again.');
     } finally {
       setPlacing(false);
@@ -118,7 +170,7 @@ export default function CartDrawer() {
   };
 
   return (
-    <div className="modal-overlay" onClick={closeCart}>
+    <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 2000 }} onClick={closeCart}>
       <div
         style={{ background: '#f8f4ee', border: '2px solid #b8c8d8', padding: 'clamp(1.25rem, 5vw, 2.5rem)', width: '100%', maxWidth: 540, marginLeft: 'auto', height: '100vh', maxHeight: '100vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}
         onClick={(e) => e.stopPropagation()}
@@ -209,16 +261,16 @@ export default function CartDrawer() {
             <div className="grid-2">
               <div className="form-group">
                 <label className="form-label">Full Name *</label>
-                <input className="form-input" value={checkout.name} onChange={(e) => setCheckout({ ...checkout, name: e.target.value })} placeholder="Your name" />
+                <input className="form-input" style={fieldStyle(checkout.name)} value={checkout.name} onChange={(e) => setCheckout({ ...checkout, name: e.target.value })} placeholder="Your name" />
               </div>
               <div className="form-group">
-                <label className="form-label">Phone</label>
-                <input className="form-input" value={checkout.phone} onChange={(e) => setCheckout({ ...checkout, phone: e.target.value })} placeholder="021 XXX XXX" />
+                <label className="form-label">Phone *</label>
+                <input className="form-input" style={fieldStyle(checkout.phone)} value={checkout.phone} onChange={(e) => setCheckout({ ...checkout, phone: e.target.value })} placeholder="021 XXX XXX" />
               </div>
             </div>
             <div className="form-group">
               <label className="form-label">Email *</label>
-              <input className="form-input" value={checkout.email} onChange={(e) => setCheckout({ ...checkout, email: e.target.value })} placeholder="you@email.com" />
+              <input className="form-input" style={fieldStyle(checkout.email)} value={checkout.email} onChange={(e) => setCheckout({ ...checkout, email: e.target.value })} placeholder="you@email.com" />
             </div>
 
             {/* Shipping */}
@@ -231,12 +283,12 @@ export default function CartDrawer() {
                 <p style={{ fontSize: '0.78rem', color: '#1a3a5c', fontWeight: 700, marginBottom: '0.75rem', letterSpacing: '0.08em' }}>Delivery Address</p>
                 <div className="form-group">
                   <label className="form-label">Street Address *</label>
-                  <input className="form-input" value={checkout.street} onChange={(e) => setCheckout({ ...checkout, street: e.target.value })} placeholder="14 Example Street" />
+                  <input className="form-input" style={fieldStyle(checkout.street)} value={checkout.street} onChange={(e) => setCheckout({ ...checkout, street: e.target.value })} placeholder="14 Example Street" />
                 </div>
                 <div className="grid-2">
                   <div className="form-group">
                     <label className="form-label">Suburb *</label>
-                    <input className="form-input" value={checkout.suburb} onChange={(e) => setCheckout({ ...checkout, suburb: e.target.value })} placeholder="Ponsonby" />
+                    <input className="form-input" style={fieldStyle(checkout.suburb)} value={checkout.suburb} onChange={(e) => setCheckout({ ...checkout, suburb: e.target.value })} placeholder="Ponsonby" />
                   </div>
                   <div className="form-group">
                     <label className="form-label">City</label>
@@ -245,7 +297,7 @@ export default function CartDrawer() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Postcode *</label>
-                  <input className="form-input" value={checkout.postcode} onChange={(e) => setCheckout({ ...checkout, postcode: e.target.value })} placeholder="1011" />
+                  <input className="form-input" style={fieldStyle(checkout.postcode)} value={checkout.postcode} onChange={(e) => setCheckout({ ...checkout, postcode: e.target.value })} placeholder="1011" />
                 </div>
                 <div style={{ background: '#fff3cd', border: '1.5px solid #c8960a', padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#664d00', fontWeight: 600 }}>
                   Shipping cost will be confirmed by our team after order placement.
@@ -283,6 +335,7 @@ export default function CartDrawer() {
               </div>
             </div>
 
+            {checkoutError && <div style={{ background: '#fde8e8', border: '1.5px solid #c04a1a', color: '#7a1a00', padding: '0.8rem 1rem', fontSize: '0.9rem', fontWeight: 700, marginBottom: '1rem' }}>{checkoutError}</div>}
             <button
               style={{ ...darkBtn, width: '100%', padding: '1.1rem', fontSize: '0.88rem', opacity: placing ? 0.7 : 1, cursor: placing ? 'not-allowed' : 'pointer' }}
               onClick={handleConfirmOrder}
