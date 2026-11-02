@@ -1,27 +1,52 @@
 import { useEffect, useState } from 'react';
 import AdminSidebar from '../../components/AdminSidebar';
 import { getListings, getViewingBookings, getStagingBookings } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 export default function AdminDashboard() {
   const [listings, setListings] = useState([]);
   const [viewings, setViewings] = useState([]);
   const [staging, setStaging] = useState([]);
+  const [orders, setOrders] = useState([]);
 
   useEffect(() => {
     async function load() {
-      const [l, v, s] = await Promise.all([getListings(), getViewingBookings(), getStagingBookings()]);
+      const [l, v, s, o] = await Promise.all([
+        getListings(),
+        getViewingBookings(),
+        getStagingBookings(),
+        supabase.from('orders').select('id, items, total, status'),
+      ]);
       setListings(l);
       setViewings(v);
       setStaging(s);
+      setOrders(o.data || []);
     }
     load();
   }, []);
 
-  const totalRevenue = listings.filter(l => l.status === 'sold').reduce((sum, l) => sum + Number(l.price || 0), 0);
+  // ── Revenue split ──
+  // Website revenue: every order that is not cancelled
+  const activeOrders = orders.filter((o) => o.status !== 'cancelled');
+  const websiteRevenue = activeOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+
+  // Every listing id that appears in any website order (cancelled ones included,
+  // so a cancelled order is never mistaken for an admin sale)
+  const orderedIds = new Set();
+  orders.forEach((o) => {
+    if (Array.isArray(o.items)) o.items.forEach((i) => orderedIds.add(String(i.id)));
+  });
+
+  const soldListings = listings.filter((l) => l.status === 'sold');
+  const adminSold = soldListings.filter((l) => !orderedIds.has(String(l.id)));
+  const adminRevenue = adminSold.reduce((sum, l) => sum + Number(l.price || 0), 0);
+  const websiteSoldCount = soldListings.length - adminSold.length;
 
   const stats = [
     { label: 'Total Listings', value: listings.length, sub: `${listings.filter(l => l.status === 'available').length} available` },
-    { label: 'Items Sold', value: listings.filter(l => l.status === 'sold').length, sub: `$${totalRevenue.toLocaleString()} revenue` },
+    { label: 'Items Sold', value: soldListings.length, sub: `${websiteSoldCount} website · ${adminSold.length} marked by admin` },
+    { label: 'Website Revenue', value: `$${websiteRevenue.toLocaleString()}`, sub: `${activeOrders.length} orders (cancelled excluded)` },
+    { label: 'Marked Sold by Admin', value: `$${adminRevenue.toLocaleString()}`, sub: `${adminSold.length} items, not in website revenue` },
     { label: 'Pending Viewings', value: viewings.filter(v => v.status === 'pending').length, sub: `${viewings.length} total` },
     { label: 'Staging Requests', value: staging.filter(s => s.status === 'pending').length, sub: `${staging.length} total` },
   ];
